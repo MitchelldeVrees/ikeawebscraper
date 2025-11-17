@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
         )
       : [];
 
+      
     if (storeEntries.length === 0) {
       if (!storeId || !storeName) {
         return NextResponse.json(
