@@ -26,10 +26,7 @@ import {
 } from "lucide-react";
 
 type Language = "en" | "nl";
-
-const translations: Record<
-  Language,
-  {
+type Translation = {
     pageTitle: string;
     pageSubtitle: string;
     signInCardTitle: string;
@@ -63,38 +60,39 @@ const translations: Record<
     switchToDark: string;
     englishShort: string;
     dutchShort: string;
-  }
-> = {
+  };
+
+const translations: Record<Language, Translation> = {
   en: {
-    pageTitle: "Your Account",
-    pageSubtitle: "View your email, watch count, and driving preferences.",
+    pageTitle: "Account settings",
+    pageSubtitle: "Check your email, watch count, and driving details.",
     signInCardTitle: "Account",
-    signInCardDescription: "Sign in to manage your account.",
-    signInNotice: "You need to be signed in to view this page.",
+    signInCardDescription: "Sign in to save your settings.",
+    signInNotice: "Log in to view this page.",
     signInButton: "Sign in",
     overviewTitle: "Overview",
-    overviewDescription: "Your account statistics",
+    overviewDescription: "A quick look at your account",
     emailLabel: "Email address",
     watchCountLabel: "Active watches",
-    drivingTitle: "Driving Preferences",
+    drivingTitle: "Driving details",
     drivingDescription:
-      "Save your starting address and vehicle consumption to plan costs.",
-    addressLabel: "Home Address",
+      "Tell us where you start from and how thirsty your car is so we can estimate fuel costs.",
+    addressLabel: "Home address",
     addressHelper:
-      "We use this to estimate distance. Provide as much as you feel comfortable; house number is optional.",
-    streetPlaceholder: "Street name",
+      "Street and city are enough. Add a house number or postcode if you like.",
+    streetPlaceholder: "Street",
     houseNumberPlaceholder: "House number (optional)",
     cityPlaceholder: "City",
-    postalCodePlaceholder: "Postal code (optional)",
-    fuelUsageLabel: "Fuel Consumption (L / 100 km)",
-    fuelUsageHelper: "Used to estimate how much fuel a round trip requires.",
-    fuelPriceLabel: "Fuel Price (€/L)",
-    fuelPriceHelper: "Current price you pay per liter of fuel.",
-    saveButton: "Save Preferences",
+    postalCodePlaceholder: "Postcode (optional)",
+    fuelUsageLabel: "Fuel consumption (L / 100 km)",
+    fuelUsageHelper: "Used to estimate the fuel needed for a round trip.",
+    fuelPriceLabel: "Fuel price (€/L)",
+    fuelPriceHelper: "What you currently pay per litre.",
+    saveButton: "Save preferences",
     savingButton: "Saving...",
-    successMessage: "Account details updated successfully.",
+    successMessage: "Saved your driving details.",
     verifyNotice: (email) =>
-      `Please verify ${email} via the link in your inbox before managing watches.`,
+      `Please confirm ${email} via the link in your inbox so we can send alerts.`,
     signedInAs: "Signed in as",
     signOut: "Sign out",
     languageLabel: "Language",
@@ -104,36 +102,36 @@ const translations: Record<
     dutchShort: "NL",
   },
   nl: {
-    pageTitle: "Jouw account",
-    pageSubtitle: "Bekijk je e-mailadres, watches en rijvoorkeuren.",
+    pageTitle: "Accountinstellingen",
+    pageSubtitle: "Bekijk je e-mail, watches en ritgegevens.",
     signInCardTitle: "Account",
-    signInCardDescription: "Log in om je account te beheren.",
-    signInNotice: "Log in om deze pagina te bekijken.",
+    signInCardDescription: "Log in om je gegevens op te slaan.",
+    signInNotice: "Log in om deze pagina te zien.",
     signInButton: "Inloggen",
     overviewTitle: "Overzicht",
-    overviewDescription: "Je accountstatistieken",
+    overviewDescription: "Een korte blik op je account",
     emailLabel: "E-mailadres",
     watchCountLabel: "Actieve watches",
-    drivingTitle: "Rijvoorkeuren",
+    drivingTitle: "Ritgegevens",
     drivingDescription:
-      "Sla je vertrekadres en brandstofverbruik op om kosten te plannen.",
+      "Geef je vertrekpunt en verbruik door zodat we brandstofkosten kunnen schatten.",
     addressLabel: "Adres",
     addressHelper:
-      "We gebruiken dit om de afstand te schatten. Vul in wat je prettig vindt; het huisnummer is optioneel.",
-    streetPlaceholder: "Straatnaam",
+      "Straat en woonplaats zijn genoeg. Huisnummer en postcode zijn optioneel.",
+    streetPlaceholder: "Straat",
     houseNumberPlaceholder: "Huisnummer (optioneel)",
     cityPlaceholder: "Plaats",
     postalCodePlaceholder: "Postcode (optioneel)",
     fuelUsageLabel: "Brandstofverbruik (L / 100 km)",
     fuelUsageHelper:
-      "Wordt gebruikt om te schatten hoeveel brandstof een retourrit kost.",
+      "We gebruiken dit om in te schatten hoeveel brandstof de rit kost.",
     fuelPriceLabel: "Brandstofprijs (€/L)",
-    fuelPriceHelper: "Huidige prijs die je per liter betaalt.",
+    fuelPriceHelper: "Wat je nu per liter betaalt.",
     saveButton: "Voorkeuren opslaan",
     savingButton: "Opslaan...",
-    successMessage: "Accountgegevens succesvol bijgewerkt.",
+    successMessage: "Je rijgegevens zijn opgeslagen.",
     verifyNotice: (email) =>
-      `Controleer ${email} via de link in je inbox voordat je watches beheert.`,
+      `Controleer ${email} via de link in je inbox zodat we meldingen kunnen sturen.`,
     signedInAs: "Ingelogd als",
     signOut: "Uitloggen",
     languageLabel: "Taal",
@@ -278,7 +276,7 @@ export default function AccountPage() {
 
   if (!user) {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      <main className="min-h-screen bg-background text-foreground transition-colors">
         <div className="container mx-auto px-4 py-16 max-w-xl space-y-6">
           <div className="flex items-center justify-between gap-4">
             <div>
@@ -316,7 +314,7 @@ export default function AccountPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <main className="min-h-screen bg-background text-foreground transition-colors">
       <div className="container mx-auto px-4 py-16 max-w-3xl space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -511,7 +509,7 @@ function LanguageThemeControls({
   setLanguage: (lang: Language) => void;
   isDark: boolean;
   toggleTheme: () => void;
-  translations: (typeof translations)["en"];
+  translations: Translation;
   canToggleTheme: boolean;
 }) {
   return (

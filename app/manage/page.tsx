@@ -202,7 +202,7 @@ export default function ManagePage() {
 
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <main className="min-h-screen bg-background text-foreground transition-colors">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
@@ -212,8 +212,8 @@ export default function ManagePage() {
             </Link>
           </Button>
           <div className="flex items-center gap-2">
-            <Package className="h-8 w-8 text-blue-600" />
-            <h1 className="text-2xl font-bold text-blue-900">Manage Your Watches</h1>
+            <Package className="h-8 w-8 text-primary" />
+            <h1 className="text-2xl font-bold">Manage Your Watches</h1>
           </div>
         </div>
 
