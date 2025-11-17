@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,9 +11,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Package, Loader2, Trash2, ArrowLeft, RefreshCcw, LogIn } from 'lucide-react';
+import { Package, Loader2, Trash2, ArrowLeft, RefreshCcw, LogIn } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/components/providers/auth-provider";
+import type { ProductPreview } from "@/lib/ikea-api";
 
 interface StoreWatch {
   id: string;
@@ -41,6 +43,9 @@ export default function ManagePage() {
   const [error, setError] = useState<string | null>(null);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [watchStatuses, setWatchStatuses] = useState<Record<string, WatchStatus>>({});
+  const [articlePreviews, setArticlePreviews] = useState<
+    Record<string, ProductPreview | null>
+  >({});
   const isVerified = Boolean(user?.email_confirmed_at);
 
   const fetchWatches = async () => {
@@ -61,14 +66,16 @@ export default function ManagePage() {
             }
           : undefined,
       });
-      const data = await response.json();
+    const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch watches");
-      }
+    if (!response.ok) {
+      throw new Error(data.error || "Failed to fetch watches");
+    }
 
-      setWatches(((data.data as WatchGroup[]) ?? []));
-      setWatchStatuses({});
+    const fetchedWatches = (data.data as WatchGroup[]) ?? [];
+    setWatches(fetchedWatches);
+    setWatchStatuses({});
+    await loadArticlePreviews(fetchedWatches);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -77,12 +84,56 @@ export default function ManagePage() {
     }
   };
 
+  const loadArticlePreviews = async (groups: WatchGroup[]) => {
+    const uniqueArticles = Array.from(
+      new Set(groups.map((group) => group.article_number))
+    );
+    const missing = uniqueArticles.filter(
+      (article) => !(article in articlePreviews)
+    );
+
+    if (missing.length === 0) {
+      return;
+    }
+
+    const previewUpdates: Record<string, ProductPreview | null> = {};
+
+    await Promise.all(
+      missing.map(async (article) => {
+        try {
+          const response = await fetch(
+            `/api/ikea/product-preview?article=${encodeURIComponent(article)}`
+          );
+
+          if (!response.ok) {
+            previewUpdates[article] = null;
+            return;
+          }
+
+          const payload = (await response.json().catch(() => null)) as
+            | { preview?: ProductPreview | null }
+            | null;
+
+          previewUpdates[article] = payload?.preview ?? null;
+        } catch (error) {
+          console.error(
+            `[v0] Error fetching preview for ${article}:`,
+            error
+          );
+          previewUpdates[article] = null;
+        }
+      })
+    );
+
+    setArticlePreviews((prev) => ({ ...prev, ...previewUpdates }));
+  };
+
   useEffect(() => {
     fetchWatches();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, isVerified, session?.access_token]);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string, articleNumber: string) => {
     try {
       const response = await fetch(`/api/watches/${id}`, {
         method: "DELETE",
@@ -108,7 +159,7 @@ export default function ManagePage() {
       );
       setWatchStatuses((prev) => {
         const next = { ...prev };
-        delete next[id];
+        delete next[articleNumber];
         return next;
       });
     } catch (err) {
@@ -116,88 +167,110 @@ export default function ManagePage() {
     }
   };
 
-  const handleManualCheck = async (
-    group: WatchGroup,
-    storeWatch: StoreWatch
-  ) => {
+  const handleCheckProduct = async (group: WatchGroup) => {
+    const key = group.article_number;
     setWatchStatuses((prev) => ({
       ...prev,
-      [storeWatch.id]: {
+      [key]: {
         isChecking: true,
       },
     }));
 
-    try {
-      const response = await fetch(`/api/watches/${storeWatch.id}/check`, {
-        method: "POST",
-        headers: session?.access_token
-          ? {
-              Authorization: `Bearer ${session.access_token}`,
-            }
-          : undefined,
-      });
+    const headers =
+      session?.access_token
+        ? {
+            Authorization: `Bearer ${session.access_token}`,
+          }
+        : undefined;
 
-      const data = await response.json();
+    const results: Array<{
+      availableMatches?: number;
+      requirementMet?: boolean;
+    }> = [];
+    const failedStores: string[] = [];
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to check watch");
-      }
+    for (const store of group.stores) {
+      try {
+        const response = await fetch(`/api/watches/${store.id}/check`, {
+          method: "POST",
+          headers,
+        });
 
-      const matchCount = Array.isArray(data.matches) ? data.matches.length : 0;
-      const notificationsSent =
-        typeof data.notificationsSent === "number" ? data.notificationsSent : 0;
-      const requiredQuantity =
-        typeof data.requiredQuantity === "number"
-          ? data.requiredQuantity
-          : group.desired_quantity;
-      const requirementMet =
-        typeof data.requirementMet === "boolean" ? data.requirementMet : false;
-      const availableMatches =
-        typeof data.availableMatches === "number"
-          ? data.availableMatches
-          : matchCount;
+        const data = await response.json();
 
-      let statusMessage = "No matching Tweedekansje deals found right now.";
-
-      if (matchCount > 0) {
-        if (!requirementMet) {
-          statusMessage = `Found ${availableMatches} matching ${
-            availableMatches === 1 ? "deal" : "deals"
-          }, but you require at least ${requiredQuantity} item${
-            requiredQuantity === 1 ? "" : "s"
-          } before alerts are sent.`;
-        } else if (notificationsSent > 0) {
-          statusMessage = `Found ${availableMatches} matching ${
-            availableMatches === 1 ? "deal" : "deals"
-          } and sent ${notificationsSent} email alert${
-            notificationsSent === 1 ? "" : "s"
-          }.`;
-        } else {
-          statusMessage = `Requirement met with ${availableMatches} matching ${
-            availableMatches === 1 ? "deal" : "deals"
-          }, but no new alerts were sent.`;
+        if (!response.ok) {
+          failedStores.push(store.store_name);
+          continue;
         }
-      }
 
-      setWatchStatuses((prev) => ({
-        ...prev,
-        [storeWatch.id]: {
-          isChecking: false,
-          message: statusMessage,
-          type: requirementMet ? "success" : "error",
-        },
-      }));
-    } catch (err) {
-      setWatchStatuses((prev) => ({
-        ...prev,
-        [storeWatch.id]: {
-          isChecking: false,
-          message:
-            err instanceof Error ? err.message : "Failed to check watch",
-          type: "error",
-        },
-      }));
+        results.push({
+          availableMatches:
+            typeof data.availableMatches === "number"
+              ? data.availableMatches
+              : Array.isArray(data.matches)
+              ? data.matches.length
+              : undefined,
+          requirementMet:
+            typeof data.requirementMet === "boolean"
+              ? data.requirementMet
+              : undefined,
+        });
+      } catch (error) {
+        console.error(
+          `[v0] Error checking watch ${store.id} for ${group.article_number}:`,
+          error
+        );
+        failedStores.push(store.store_name);
+      }
     }
+
+    const totalMatches = results.reduce(
+      (sum, res) => sum + (res.availableMatches ?? 0),
+      0
+    );
+    const requirementMet = results.some((res) => res.requirementMet);
+    const messageParts: string[] = [
+      `Checked ${group.stores.length} ${
+        group.stores.length === 1 ? "store" : "stores"
+      }.`,
+    ];
+
+    if (totalMatches > 0) {
+      messageParts.push(
+        `Matched ${totalMatches} ${
+          totalMatches === 1 ? "deal" : "deals"
+        } across ${results.length} ${
+          results.length === 1 ? "store" : "stores"
+        }.`
+      );
+    } else {
+      messageParts.push("No matching Tweedekansje deals found right now.");
+    }
+
+    if (requirementMet) {
+      messageParts.push("Requirement met.");
+    }
+
+    if (failedStores.length > 0) {
+      messageParts.push(
+        `Failed to check ${failedStores.length} ${
+          failedStores.length === 1 ? "store" : "stores"
+        }: ${failedStores.join(", ")}.`
+      );
+    }
+
+    const statusMessage = messageParts.join(" ");
+    const statusType: WatchStatus["type"] =
+      requirementMet || failedStores.length > 0 ? (requirementMet ? "success" : "error") : undefined;
+
+    setWatchStatuses((prev) => ({
+      ...prev,
+      [key]: {
+        isChecking: false,
+        message: statusMessage,
+        type: statusType,
+      },
+    }));
   };
 
 
@@ -304,93 +377,118 @@ export default function ManagePage() {
               </Card>
             ) : (
               <div className="space-y-4">
-                {watches.map((group) => (
-                  <Card key={group.article_number}>
-                    <CardContent className="pt-6">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg mb-2">
-                            Article {group.article_number}
-                          </h3>
-                          <div className="space-y-1 text-sm text-muted-foreground">
-                            <p>
-                              <span className="font-medium">Minimum quantity:</span>{" "}
-                              {group.desired_quantity ?? 1}
-                            </p>
-                            <p>
-                              <span className="font-medium">Created:</span>{" "}
-                              {new Date(group.created_at).toLocaleDateString("nl-NL", {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                              })}
+                {watches.map((group) => {
+                  const preview = articlePreviews[group.article_number];
+                  const displayName =
+                    preview?.name ?? `Article ${group.article_number}`;
+
+                  return (
+                    <Card key={group.article_number}>
+                      <CardContent className="pt-6">
+                        <div className="flex items-center gap-4">
+                          {preview?.imageUrl && (
+                            <div className="h-16 w-16 overflow-hidden rounded border border-border">
+                              <Image
+                                src={preview.imageUrl}
+                                width={64}
+                                height={64}
+                                alt={preview.name ?? "Product image"}
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                          )}
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-lg">{displayName}</h3>
+                            <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                              Article {group.article_number}
                             </p>
                           </div>
                         </div>
-                      </div>
-                      <div className="mt-4 space-y-3">
-                        {group.stores.map((store) => (
-                          <div
-                            key={store.id}
-                            className="rounded border p-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between"
-                          >
-                            <div>
-                              <p className="font-medium">{store.store_name}</p>
-                              <p className="text-sm text-muted-foreground">
-                                Added on{" "}
-                                {new Date(store.created_at).toLocaleDateString("nl-NL", {
+                        <div className="mt-4 flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="space-y-1 text-sm text-muted-foreground">
+                              <p>
+                                <span className="font-medium">Minimum quantity:</span>{" "}
+                                {group.desired_quantity ?? 1}
+                              </p>
+                              <p>
+                                <span className="font-medium">Created:</span>{" "}
+                                {new Date(group.created_at).toLocaleDateString("nl-NL", {
                                   year: "numeric",
                                   month: "long",
                                   day: "numeric",
                                 })}
                               </p>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="secondary"
-                                size="sm"
-                                onClick={() => handleManualCheck(group, store)}
-                                disabled={watchStatuses[store.id]?.isChecking}
-                              >
-                                {watchStatuses[store.id]?.isChecking ? (
-                                  <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Checking...
-                                  </>
-                                ) : (
-                                  <>
-                                    <RefreshCcw className="mr-2 h-4 w-4" />
-                                    Check now
-                                  </>
-                                )}
-                              </Button>
-                              <Button
-                                variant="destructive"
-                                size="icon"
-                                onClick={() => handleDelete(store.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            {watchStatuses[store.id]?.message && (
-                              <Alert
-                                variant={
-                                  watchStatuses[store.id]?.type === "error"
-                                    ? "destructive"
-                                    : "default"
-                                }
-                              >
-                                <AlertDescription>
-                                  {watchStatuses[store.id]?.message}
-                                </AlertDescription>
-                              </Alert>
-                            )}
                           </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => handleCheckProduct(group)}
+                            disabled={watchStatuses[group.article_number]?.isChecking}
+                          >
+                            {watchStatuses[group.article_number]?.isChecking ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Checking...
+                              </>
+                            ) : (
+                              <>
+                                <RefreshCcw className="mr-2 h-4 w-4" />
+                                Check product
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                        <div className="mt-4 space-y-3">
+                          {group.stores.map((store) => (
+                            <div
+                              key={store.id}
+                              className="rounded border p-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between"
+                            >
+                              <div>
+                                <p className="font-medium">{store.store_name}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Added on{" "}
+                                  {new Date(store.created_at).toLocaleDateString("nl-NL", {
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                  })}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="destructive"
+                                  size="icon"
+                                  onClick={() =>
+                                    handleDelete(store.id, group.article_number)
+                                  }
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        {watchStatuses[group.article_number]?.message && (
+                          <Alert
+                            variant={
+                              watchStatuses[group.article_number]?.type === "error"
+                                ? "destructive"
+                                : "default"
+                            }
+                            className="mt-3"
+                          >
+                            <AlertDescription>
+                              {watchStatuses[group.article_number]?.message}
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </div>

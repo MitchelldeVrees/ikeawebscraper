@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import Image from "next/image";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,10 +18,21 @@ import Link from "next/link";
 import { useAuth } from "@/components/providers/auth-provider";
 import { IKEA_STORES } from "@/lib/ikea-stores";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
+import type { ProductPreview } from "@/lib/ikea-api";
+
+type ArticleValidationStatus = "idle" | "checking" | "valid" | "invalid";
 
 export function WatchForm() {
   const { user, loading, session } = useAuth();
   const [articleNumber, setArticleNumber] = useState("");
+  const [articleValidationStatus, setArticleValidationStatus] =
+    useState<ArticleValidationStatus>("idle");
+  const [articleValidationReason, setArticleValidationReason] = useState<string | null>(
+    null
+  );
+  const verifyingArticleRef = useRef<string | null>(null);
+  const [productPreview, setProductPreview] = useState<ProductPreview | null>(null);
   const [selectedStores, setSelectedStores] = useState<string[]>([]);
   const [desiredQuantity, setDesiredQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -34,6 +46,109 @@ export function WatchForm() {
   const [isImporting, setIsImporting] = useState(false);
 
   const isVerified = Boolean(user?.email_confirmed_at);
+  const articleIsValid = articleValidationStatus === "valid";
+  const articleInputClassName = cn(
+    articleValidationStatus === "invalid" &&
+      "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/50",
+    articleValidationStatus === "valid" &&
+      "border-emerald-500 focus-visible:border-emerald-500 focus-visible:ring-emerald-500/50"
+  );
+  const articleValidationMessage =
+    articleValidationStatus === "checking"
+      ? "Verifying article number..."
+      : articleValidationStatus === "invalid"
+      ? articleValidationReason ?? "Incorrect product id."
+      : articleValidationStatus === "valid"
+      ? "Product id confirmed."
+      : "Use the 8-digit IKEA article number from the product page.";
+  const articleValidationMessageClass = cn(
+    articleValidationStatus === "invalid" && "text-destructive",
+    articleValidationStatus === "valid" && "text-emerald-600",
+    articleValidationStatus === "checking" && "text-foreground",
+    articleValidationStatus === "idle" && "text-muted-foreground"
+  );
+  const resetArticleValidation = () => {
+    verifyingArticleRef.current = null;
+    setArticleValidationStatus("idle");
+    setArticleValidationReason(null);
+    setProductPreview(null);
+  };
+
+  const handleArticleBlur = async () => {
+    const normalized = articleNumber.replace(/\D/g, "");
+
+    if (!normalized) {
+      resetArticleValidation();
+      return;
+    }
+
+    if (normalized.length !== 8) {
+      verifyingArticleRef.current = null;
+      setArticleValidationStatus("invalid");
+      setArticleValidationReason(
+        "Article number must contain 8 digits (e.g., 50487857)."
+      );
+      setProductPreview(null);
+      return;
+    }
+
+    verifyingArticleRef.current = normalized;
+    setArticleValidationStatus("checking");
+    setArticleValidationReason(null);
+
+    const previewUrl = `/api/ikea/product-preview?article=${encodeURIComponent(
+      normalized
+    )}`;
+
+    let preview: ProductPreview | null = null;
+
+    try {
+      const response = await fetch(previewUrl);
+
+      if (!response.ok) {
+        const reason =
+          response.status === 404
+            ? "Incorrect product id."
+            : "Unable to verify the product right now.";
+
+        verifyingArticleRef.current = null;
+        setArticleValidationStatus("invalid");
+        setArticleValidationReason(reason);
+        setProductPreview(null);
+        return;
+      }
+
+      const payload = (await response.json().catch(() => null)) as
+        | { preview?: ProductPreview | null }
+        | null;
+
+      preview = payload?.preview ?? null;
+
+      if (!preview) {
+        verifyingArticleRef.current = null;
+        setArticleValidationStatus("invalid");
+        setArticleValidationReason("Incorrect product id.");
+        setProductPreview(null);
+        return;
+      }
+    } catch (error) {
+      console.error("[v0] fetchProductPreview error:", error);
+      verifyingArticleRef.current = null;
+      setArticleValidationStatus("invalid");
+      setArticleValidationReason("Unable to verify the product right now.");
+      setProductPreview(null);
+      return;
+    }
+
+    if (verifyingArticleRef.current !== normalized) {
+      return;
+    }
+
+    verifyingArticleRef.current = null;
+    setArticleValidationStatus("valid");
+    setArticleValidationReason(null);
+    setProductPreview(preview);
+  };
 
   const toggleStore = (storeId: string) => {
     setSelectedStores((prev) =>
@@ -82,6 +197,12 @@ export function WatchForm() {
       return;
     }
 
+    if (articleValidationStatus !== "valid") {
+      setError("Verify the IKEA article number before creating a watch.");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch("/api/watches", {
         method: "POST",
@@ -111,6 +232,7 @@ export function WatchForm() {
       setArticleNumber("");
       setSelectedStores([]);
       setDesiredQuantity(1);
+      resetArticleValidation();
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -254,7 +376,7 @@ export function WatchForm() {
         <Tabs defaultValue="manual">
           <TabsList className="mb-4">
             <TabsTrigger value="manual">Manual</TabsTrigger>
-            <TabsTrigger value="csv">CSV Upload</TabsTrigger>
+            <TabsTrigger value="csv">Bulk Upload</TabsTrigger>
           </TabsList>
 
           <TabsContent value="manual">
@@ -266,12 +388,59 @@ export function WatchForm() {
                   type="text"
                   placeholder="e.g., 50487857 or 504.878.57"
                   value={articleNumber}
-                  onChange={(e) => setArticleNumber(e.target.value)}
+                  onChange={(e) => {
+                    setArticleNumber(e.target.value);
+                    resetArticleValidation();
+                  }}
+                  onBlur={handleArticleBlur}
+                  aria-invalid={articleValidationStatus === "invalid"}
+                  className={articleInputClassName}
                   required
                 />
-                <p className="text-xs text-muted-foreground">
-                  Use the 8-digit IKEA article number from the product page.
+                <p className={cn("text-xs", articleValidationMessageClass)}>
+                  {articleValidationMessage}
                 </p>
+                {productPreview?.imageUrl && (
+                  <div className="mt-2 flex items-start gap-3">
+                    <Image
+                      src={productPreview.imageUrl}
+                      alt={productPreview.name ?? "Product preview"}
+                      width={96}
+                      height={96}
+                      className="h-16 w-16 rounded border object-cover"
+                    />
+                    <div className="flex flex-col text-sm text-muted-foreground">
+                      {productPreview.name && (
+                        <p className="font-semibold text-foreground">
+                          {productPreview.name}
+                        </p>
+                      )}
+                      {productPreview.typeName && (
+                        <p className="uppercase tracking-wide text-xs">
+                          {productPreview.typeName}
+                        </p>
+                      )}
+                      {productPreview.price && (
+                        <p className="text-foreground">{productPreview.price}</p>
+                      )}
+                      {productPreview.priceExclTax && (
+                        <p className="text-xs text-muted-foreground">
+                          excl. BTW {productPreview.priceExclTax}
+                        </p>
+                      )}
+                      {productPreview.pipUrl && (
+                        <a
+                          href={productPreview.pipUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs text-blue-600 underline"
+                        >
+                          View on IKEA
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -355,7 +524,13 @@ export function WatchForm() {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={isLoading || loading || !user || !isVerified}
+                disabled={
+                  isLoading ||
+                  loading ||
+                  !user ||
+                  !isVerified ||
+                  !articleIsValid
+                }
               >
                 {isLoading ? (
                   <>

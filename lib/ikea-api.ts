@@ -151,6 +151,57 @@ export function matchLegacyProductName(searchTerm: string, productName: string):
   return searchWords.every((word) => normalizedProduct.includes(word));
 }
 
+const IKEA_PRODUCT_BASE_URL = "https://www.ikea.com/nl/nl/products";
+
+const buildProductUrls = (normalized: string): string[] => {
+  const suffix = normalized.slice(5);
+  if (!suffix) {
+    return [];
+  }
+
+  return [
+    `${IKEA_PRODUCT_BASE_URL}/${suffix}/s${normalized}.json`,
+    `${IKEA_PRODUCT_BASE_URL}/${suffix}/${normalized}.json`,
+  ];
+};
+
+const buildIkeaHeaders = (userAgent?: string) => ({
+  Accept: "application/json",
+  "User-Agent": userAgent ?? "Mozilla/5.0 (compatible; IkeaWatchBot/1.0)",
+  Referer: "https://www.ikea.com/",
+  "X-Client-id": "4863e7d2-1428-4324-890b-ae5dede24fc6",
+});
+
+async function fetchProductJson(
+  normalized: string,
+  userAgent?: string
+): Promise<any | null> {
+  const urls = buildProductUrls(normalized);
+  if (urls.length === 0) {
+    return null;
+  }
+
+  const headers = buildIkeaHeaders(userAgent);
+
+  for (const url of urls) {
+    try {
+      const response = await fetch(url, { headers });
+      if (response.ok) {
+        return (await response.json().catch(() => null)) ?? null;
+      }
+
+      if (response.status !== 404) {
+        return null;
+      }
+    } catch (error) {
+      console.error("[v0] fetchProductJson error:", error);
+      return null;
+    }
+  }
+
+  return null;
+}
+
 export async function verifyArticleExists(
   articleNumber: string,
   userAgent?: string
@@ -160,29 +211,50 @@ export async function verifyArticleExists(
     return false;
   }
 
-  const url = `https://web-api.ikea.com/nl/nl/rotera/data/exists/${normalized}/`;
+  const product = await fetchProductJson(normalized, userAgent);
+  return Boolean(product);
+}
 
-  try {
-    const response = await fetch(url, {
-      headers: {
-        Accept: "application/json;version=2",
-        "User-Agent": userAgent ?? "Mozilla/5.0 (compatible; IkeaWatchBot/1.0)",
-        Referer: "https://www.ikea.com/",
-        "X-Client-id": "4863e7d2-1428-4324-890b-ae5dede24fc6",
-      },
-    });
+export interface ProductPreview {
+  imageUrl?: string;
+  name?: string;
+  price?: string;
+  priceExclTax?: string;
+  typeName?: string;
+  pipUrl?: string;
+}
 
-    if (!response.ok) {
-      return false;
-    }
-
-    const data = (await response.json().catch(() => null)) as
-      | { exists?: boolean }
-      | null;
-
-    return Boolean(data?.exists);
-  } catch (error) {
-    console.error("[v0] verifyArticleExists error:", error);
-    return false;
+export async function fetchProductPreview(
+  articleNumber: string,
+  userAgent?: string
+): Promise<ProductPreview | null> {
+  const normalized = articleNumber.replace(/\D/g, "");
+  if (normalized.length !== 8) {
+    return null;
   }
+
+  const product = await fetchProductJson(normalized, userAgent);
+  if (!product) {
+    return null;
+  }
+
+  const contextualImage = product?.experimental?.contextualImage;
+  const mainImage = product?.mainImage;
+  const fallbackImage =
+    contextualImage?.url ??
+    mainImage?.url ??
+    product?.media?.[0]?.url ??
+    product?.heroImage ??
+    product?.primaryImage?.url;
+  const imageAlt =
+    contextualImage?.alt ?? mainImage?.alt ?? product?.name ?? undefined;
+
+  return {
+    imageUrl: fallbackImage,
+    name: product?.name ?? undefined,
+    price: product?.price ?? undefined,
+    priceExclTax: product?.priceExclTax ?? undefined,
+    typeName: product?.typeName ?? undefined,
+    pipUrl: product?.pipUrl ?? undefined,
+  };
 }
