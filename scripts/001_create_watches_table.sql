@@ -2,9 +2,10 @@
 create table if not exists public.watches (
   id uuid primary key default gen_random_uuid(),
   email text not null,
-  product_name text not null,
+  product_name text not null, -- stores the requested article number
   store_id text not null,
   store_name text not null,
+  desired_quantity integer not null default 1,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   is_active boolean default true not null
 );

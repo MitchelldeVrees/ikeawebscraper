@@ -9,11 +9,24 @@ export async function DELETE(
     const { id } = await context.params;
 
     const supabase = await createClient();
+    const authHeader = request.headers.get("authorization");
+    const token = authHeader?.startsWith("Bearer ")
+      ? authHeader.slice("Bearer ".length)
+      : undefined;
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser(token);
 
-    const { error } = await supabase
+    if (userError || !user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { error, count } = await supabase
       .from("watches")
-      .delete()
-      .eq("id", id);
+      .delete({ count: "exact" })
+      .eq("id", id)
+      .eq("email", user.email);
 
     if (error) {
       console.error("[v0] Error deleting watch:", error);
@@ -21,6 +34,10 @@ export async function DELETE(
         { error: "Failed to delete watch" },
         { status: 500 }
       );
+    }
+
+    if (!count) {
+      return NextResponse.json({ error: "Watch not found" }, { status: 404 });
     }
 
     return NextResponse.json({ success: true }, { status: 200 });

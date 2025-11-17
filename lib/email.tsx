@@ -1,3 +1,8 @@
+import { Resend } from "resend";
+
+const resendApiKey = process.env.RESEND_API_KEY;
+const resendClient = resendApiKey ? new Resend(resendApiKey) : null;
+
 interface EmailData {
   to: string;
   productName: string;
@@ -5,31 +10,34 @@ interface EmailData {
   storeName: string;
   productImage?: string;
   watchId: string;
+  originalPrice?: number;
+  distanceKm?: number;
+  fuelCost?: number;
+  fuelPricePerLiter?: number;
+  fuelUsage?: number;
+  storeAddress?: string;
 }
 
 export async function sendProductAlert(data: EmailData): Promise<boolean> {
+  if (!resendClient) {
+    console.error("[v0] RESEND_API_KEY missing - cannot send alert email");
+    return false;
+  }
+
   try {
-    // For now, we'll log the email content
-    // In production, integrate with Resend or another email service
-    console.log("[v0] Sending email alert:", {
+    const response = await resendClient.emails.send({
+      from:
+        process.env.RESEND_FROM_EMAIL ||
+        "IKEA Tweedekansje Alerts <onboarding@resend.dev>",
       to: data.to,
       subject: `IKEA Deal Alert: ${data.productName}`,
-      content: {
-        productName: data.productName,
-        price: `€${data.productPrice.toFixed(2)}`,
-        store: data.storeName,
-        imageUrl: data.productImage,
-      },
+      html: generateEmailHtml(data),
     });
 
-    // TODO: Integrate with Resend
-    // const resend = new Resend(process.env.RESEND_API_KEY);
-    // await resend.emails.send({
-    //   from: 'IKEA Alerts <alerts@yourdomain.com>',
-    //   to: data.to,
-    //   subject: `IKEA Deal Alert: ${data.productName}`,
-    //   html: generateEmailHtml(data),
-    // });
+    if (response.error) {
+      console.error("[v0] Resend API error:", response.error);
+      return false;
+    }
 
     return true;
   } catch (error) {
@@ -38,7 +46,40 @@ export async function sendProductAlert(data: EmailData): Promise<boolean> {
   }
 }
 
+function formatCurrency(value: number | undefined | null) {
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return null;
+  }
+  return `€${value.toFixed(2)}`;
+}
+
 function generateEmailHtml(data: EmailData): string {
+  const originalPrice =
+    typeof data.originalPrice === "number" && data.originalPrice > 0
+      ? data.originalPrice
+      : null;
+  const priceNow = data.productPrice;
+  const fuelCost =
+    typeof data.fuelCost === "number" && data.fuelCost > 0
+      ? data.fuelCost
+      : null;
+  const potentialSavings =
+    originalPrice !== null
+      ? originalPrice - priceNow - (fuelCost ?? 0)
+      : null;
+  const distanceInfo =
+    typeof data.distanceKm === "number" && data.distanceKm > 0
+      ? `${data.distanceKm.toFixed(1)} km round trip`
+      : null;
+  const fuelUsageInfo =
+    typeof data.fuelUsage === "number" && data.fuelUsage > 0
+      ? `${data.fuelUsage.toFixed(1)} L/100km`
+      : null;
+  const fuelPriceInfo =
+    typeof data.fuelPricePerLiter === "number" && data.fuelPricePerLiter > 0
+      ? `${data.fuelPricePerLiter.toFixed(2)} €/L`
+      : null;
+
   return `
     <!DOCTYPE html>
     <html>
@@ -66,13 +107,43 @@ function generateEmailHtml(data: EmailData): string {
             <div class="product">
               ${data.productImage ? `<img src="${data.productImage}" alt="${data.productName}" class="product-image">` : ''}
               <h2>${data.productName}</h2>
-              <p class="price">€${data.productPrice.toFixed(2)}</p>
+              <p class="price">${formatCurrency(priceNow) ?? ""}</p>
               <p><strong>Store:</strong> ${data.storeName}</p>
+              ${data.storeAddress ? `<p><strong>Address:</strong> ${data.storeAddress}</p>` : ""}
               <p>
                 <a href="https://www.ikea.com/nl/nl/stores/tweedekansje/" class="button">
                   View on IKEA Tweedekansje
                 </a>
               </p>
+            </div>
+            <div class="product" style="background-color:#fff7d6;">
+              <h3>Price Breakdown</h3>
+              <ul style="padding-left:20px;">
+                ${
+                  originalPrice !== null
+                    ? `<li>Original price: <strong>${formatCurrency(originalPrice)}</strong></li>`
+                    : ""
+                }
+                <li>Tweedekansje price: <strong>${formatCurrency(priceNow) ?? ""}</strong></li>
+                ${
+                  fuelCost !== null
+                    ? `<li>Estimated fuel cost: <strong>${formatCurrency(fuelCost)}</strong>${
+                        distanceInfo
+                          ? ` (${distanceInfo}${fuelUsageInfo ? `, ${fuelUsageInfo}` : ""}${
+                              fuelPriceInfo ? `, fuel price ${fuelPriceInfo}` : ""
+                            })`
+                          : ""
+                      }</li>`
+                    : ""
+                }
+                ${
+                  potentialSavings !== null
+                    ? `<li>Estimated savings after fuel: <strong>${formatCurrency(
+                        potentialSavings
+                      )}</strong></li>`
+                    : ""
+                }
+              </ul>
             </div>
             <p>This is a limited-time offer. Visit your local IKEA store to purchase this item.</p>
           </div>

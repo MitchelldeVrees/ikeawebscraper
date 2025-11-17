@@ -13,9 +13,14 @@ export default function Home() {
             <Package className="h-8 w-8 text-blue-600" />
             <h1 className="text-2xl font-bold text-blue-900">IKEA Tweedekansje Alerts</h1>
           </div>
-          <Button asChild variant="outline">
-            <Link href="/manage">Manage Watches</Link>
-          </Button>
+          <div className="flex gap-3">
+            <Button asChild variant="outline">
+              <Link href="/manage">Manage Watches</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/account">Account</Link>
+            </Button>
+          </div>
         </header>
 
         {/* Hero Section */}
@@ -55,7 +60,7 @@ export default function Home() {
         </div>
 
         {/* Watch Form */}
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <WatchForm />
         </div>
 

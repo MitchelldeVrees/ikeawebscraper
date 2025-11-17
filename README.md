@@ -6,6 +6,10 @@ A web application that monitors IKEA's Tweedekansje (second chance) deals and se
 
 - **Email-based watches**: No account needed, just provide your email
 - **Store-specific monitoring**: Watch products at your preferred IKEA store
+- **Multi-store coverage**: Monitor the same article across multiple IKEA NL stores at once
+- **Quantity thresholds**: Choose how many available units should trigger an alert
+- **CSV import/export**: Download a template, fill in product IDs & quantities, and import watches in bulk
+- **Account preferences**: Store your driving origin and vehicle fuel usage for future mileage cost estimates
 - **Automated checking**: Runs every 4 hours (07:00, 11:00, 15:00, 19:00, 23:00, 03:00)
 - **Smart matching**: Fuzzy product name matching to catch variations
 - **Duplicate prevention**: Won't spam you with the same deal twice
@@ -16,9 +20,18 @@ A web application that monitors IKEA's Tweedekansje (second chance) deals and se
 - Amersfoort (415)
 - Amsterdam (088)
 - Barendrecht (274)
+- Breda (403)
+- Delft (151)
+- Duiven (272)
+- Eindhoven (087)
+- Groningen (404)
 - Haarlem (378)
+- Heerlen (089)
+- Hengelo (312)
+- Utrecht (270)
+- Zwolle (391)
 
-More stores can be added by extending the store mapping.
+All Dutch IKEA locations are included by default. Extend the `IKEA_STORES` mapping if new stores are introduced.
 
 ## Setup
 
@@ -34,6 +47,8 @@ More stores can be added by extending the store mapping.
 2. Run the SQL scripts in the `scripts` folder:
    - `001_create_watches_table.sql`
    - `002_create_notifications_table.sql`
+   - `003_add_desired_quantity_to_watches.sql`
+   - `004_create_profiles_table.sql`
 
 ### Environment Variables
 

@@ -1,9 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -12,52 +10,87 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Package, Loader2, Trash2, ArrowLeft } from 'lucide-react';
+import { Package, Loader2, Trash2, ArrowLeft, RefreshCcw, LogIn } from 'lucide-react';
 import Link from "next/link";
+import { useAuth } from "@/components/providers/auth-provider";
 
-interface Watch {
+interface StoreWatch {
   id: string;
-  email: string;
-  product_name: string;
   store_id: string;
   store_name: string;
   created_at: string;
-  is_active: boolean;
 }
 
+interface WatchGroup {
+  article_number: string;
+  desired_quantity: number;
+  created_at: string;
+  stores: StoreWatch[];
+}
+
+type WatchStatus = {
+  isChecking: boolean;
+  message?: string;
+  type?: "success" | "error";
+};
+
 export default function ManagePage() {
-  const [email, setEmail] = useState("");
-  const [watches, setWatches] = useState<Watch[]>([]);
+  const { user, loading, session, supabase } = useAuth();
+  const [watches, setWatches] = useState<WatchGroup[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasSearched, setHasSearched] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const [watchStatuses, setWatchStatuses] = useState<Record<string, WatchStatus>>({});
+  const isVerified = Boolean(user?.email_confirmed_at);
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const fetchWatches = async () => {
+    if (!user || !isVerified) {
+      setWatches([]);
+      setHasLoaded(true);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
-    setHasSearched(true);
 
     try {
-      const response = await fetch(`/api/watches?email=${encodeURIComponent(email)}`);
+      const response = await fetch("/api/watches", {
+        headers: session?.access_token
+          ? {
+              Authorization: `Bearer ${session.access_token}`,
+            }
+          : undefined,
+      });
       const data = await response.json();
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to fetch watches");
       }
 
-      setWatches(data.data || []);
+      setWatches(((data.data as WatchGroup[]) ?? []));
+      setWatchStatuses({});
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
+      setHasLoaded(true);
     }
   };
+
+  useEffect(() => {
+    fetchWatches();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, isVerified, session?.access_token]);
 
   const handleDelete = async (id: string) => {
     try {
       const response = await fetch(`/api/watches/${id}`, {
         method: "DELETE",
+        headers: session?.access_token
+          ? {
+              Authorization: `Bearer ${session.access_token}`,
+            }
+          : undefined,
       });
 
       if (!response.ok) {
@@ -65,11 +98,108 @@ export default function ManagePage() {
       }
 
       // Remove from local state
-      setWatches(watches.filter((watch) => watch.id !== id));
+      setWatches((prev) =>
+        prev
+          .map((group) => ({
+            ...group,
+            stores: group.stores.filter((store) => store.id !== id),
+          }))
+          .filter((group) => group.stores.length > 0)
+      );
+      setWatchStatuses((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete watch");
     }
   };
+
+  const handleManualCheck = async (
+    group: WatchGroup,
+    storeWatch: StoreWatch
+  ) => {
+    setWatchStatuses((prev) => ({
+      ...prev,
+      [storeWatch.id]: {
+        isChecking: true,
+      },
+    }));
+
+    try {
+      const response = await fetch(`/api/watches/${storeWatch.id}/check`, {
+        method: "POST",
+        headers: session?.access_token
+          ? {
+              Authorization: `Bearer ${session.access_token}`,
+            }
+          : undefined,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to check watch");
+      }
+
+      const matchCount = Array.isArray(data.matches) ? data.matches.length : 0;
+      const notificationsSent =
+        typeof data.notificationsSent === "number" ? data.notificationsSent : 0;
+      const requiredQuantity =
+        typeof data.requiredQuantity === "number"
+          ? data.requiredQuantity
+          : group.desired_quantity;
+      const requirementMet =
+        typeof data.requirementMet === "boolean" ? data.requirementMet : false;
+      const availableMatches =
+        typeof data.availableMatches === "number"
+          ? data.availableMatches
+          : matchCount;
+
+      let statusMessage = "No matching Tweedekansje deals found right now.";
+
+      if (matchCount > 0) {
+        if (!requirementMet) {
+          statusMessage = `Found ${availableMatches} matching ${
+            availableMatches === 1 ? "deal" : "deals"
+          }, but you require at least ${requiredQuantity} item${
+            requiredQuantity === 1 ? "" : "s"
+          } before alerts are sent.`;
+        } else if (notificationsSent > 0) {
+          statusMessage = `Found ${availableMatches} matching ${
+            availableMatches === 1 ? "deal" : "deals"
+          } and sent ${notificationsSent} email alert${
+            notificationsSent === 1 ? "" : "s"
+          }.`;
+        } else {
+          statusMessage = `Requirement met with ${availableMatches} matching ${
+            availableMatches === 1 ? "deal" : "deals"
+          }, but no new alerts were sent.`;
+        }
+      }
+
+      setWatchStatuses((prev) => ({
+        ...prev,
+        [storeWatch.id]: {
+          isChecking: false,
+          message: statusMessage,
+          type: requirementMet ? "success" : "error",
+        },
+      }));
+    } catch (err) {
+      setWatchStatuses((prev) => ({
+        ...prev,
+        [storeWatch.id]: {
+          isChecking: false,
+          message:
+            err instanceof Error ? err.message : "Failed to check watch",
+          type: "error",
+        },
+      }));
+    }
+  };
+
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -87,51 +217,76 @@ export default function ManagePage() {
           </div>
         </div>
 
-        {/* Search Form */}
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>Find Your Watches</CardTitle>
+            <CardTitle>Your Watches</CardTitle>
             <CardDescription>
-              Enter your email address to view and manage your product watches
+              View and manage the IKEA article numbers you are tracking.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSearch} className="flex gap-4">
-              <div className="flex-1">
-                <Label htmlFor="email" className="sr-only">
-                  Email Address
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="your@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Searching...
-                  </>
-                ) : (
-                  "Find Watches"
-                )}
-              </Button>
-            </form>
-
+          <CardContent className="space-y-4">
             {error && (
-              <Alert variant="destructive" className="mt-4">
+              <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
+
+            {!loading && !user && (
+              <Alert className="bg-blue-50 border-blue-200 text-blue-900">
+                <AlertDescription className="flex items-center justify-between gap-4">
+                  <span>
+                    Please sign in to access your watches.
+                  </span>
+                  <Button asChild variant="secondary">
+                    <Link href="/login" className="flex items-center gap-2">
+                      <LogIn className="h-4 w-4" />
+                      Sign in
+                    </Link>
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {user && !isVerified && (
+              <Alert className="bg-amber-50 border-amber-200 text-amber-900">
+                <AlertDescription>
+                  Please verify <strong>{user.email}</strong> via the link in your inbox before managing watches.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <div className="flex flex-wrap items-center gap-4">
+              <Button onClick={fetchWatches} disabled={isLoading || !user || !isVerified}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Refreshing...
+                  </>
+                ) : (
+                  "Refresh Watches"
+                )}
+              </Button>
+              {user && (
+                <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                  <p>
+                    Signed in as <span className="font-medium">{user.email}</span>
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => supabase.auth.signOut()}
+                  >
+                    Sign out
+                  </Button>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 
         {/* Watches List */}
-        {hasSearched && (
+        {hasLoaded && user && isVerified && (
           <div>
             <h2 className="text-xl font-semibold mb-4">
               {watches.length > 0
@@ -149,21 +304,22 @@ export default function ManagePage() {
               </Card>
             ) : (
               <div className="space-y-4">
-                {watches.map((watch) => (
-                  <Card key={watch.id}>
+                {watches.map((group) => (
+                  <Card key={group.article_number}>
                     <CardContent className="pt-6">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <h3 className="font-semibold text-lg mb-2">
-                            {watch.product_name}
+                            Article {group.article_number}
                           </h3>
                           <div className="space-y-1 text-sm text-muted-foreground">
                             <p>
-                              <span className="font-medium">Store:</span> {watch.store_name}
+                              <span className="font-medium">Minimum quantity:</span>{" "}
+                              {group.desired_quantity ?? 1}
                             </p>
                             <p>
                               <span className="font-medium">Created:</span>{" "}
-                              {new Date(watch.created_at).toLocaleDateString("nl-NL", {
+                              {new Date(group.created_at).toLocaleDateString("nl-NL", {
                                 year: "numeric",
                                 month: "long",
                                 day: "numeric",
@@ -171,13 +327,66 @@ export default function ManagePage() {
                             </p>
                           </div>
                         </div>
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          onClick={() => handleDelete(watch.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                      </div>
+                      <div className="mt-4 space-y-3">
+                        {group.stores.map((store) => (
+                          <div
+                            key={store.id}
+                            className="rounded border p-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between"
+                          >
+                            <div>
+                              <p className="font-medium">{store.store_name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                Added on{" "}
+                                {new Date(store.created_at).toLocaleDateString("nl-NL", {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                })}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => handleManualCheck(group, store)}
+                                disabled={watchStatuses[store.id]?.isChecking}
+                              >
+                                {watchStatuses[store.id]?.isChecking ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Checking...
+                                  </>
+                                ) : (
+                                  <>
+                                    <RefreshCcw className="mr-2 h-4 w-4" />
+                                    Check now
+                                  </>
+                                )}
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="icon"
+                                onClick={() => handleDelete(store.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            {watchStatuses[store.id]?.message && (
+                              <Alert
+                                variant={
+                                  watchStatuses[store.id]?.type === "error"
+                                    ? "destructive"
+                                    : "default"
+                                }
+                              >
+                                <AlertDescription>
+                                  {watchStatuses[store.id]?.message}
+                                </AlertDescription>
+                              </Alert>
+                            )}
+                          </div>
+                        ))}
                       </div>
                     </CardContent>
                   </Card>
