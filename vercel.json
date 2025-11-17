@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/check-deals",
+      "schedule": "0 7,11,15,19,23,3 * * *"
+    }
+  ]
+}
