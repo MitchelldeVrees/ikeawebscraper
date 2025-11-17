@@ -10,7 +10,7 @@ A web application that monitors IKEA's Tweedekansje (second chance) deals and se
 - **Quantity thresholds**: Choose how many available units should trigger an alert
 - **CSV import/export**: Download a template, fill in product IDs & quantities, and import watches in bulk
 - **Account preferences**: Store your driving origin and vehicle fuel usage for future mileage cost estimates
-- **Automated checking**: Runs every 4 hours (07:00, 11:00, 15:00, 19:00, 23:00, 03:00)
+- **Manual refresh**: Re-check your watches from the Manage page whenever you need an update
 - **Smart matching**: Fuzzy product name matching to catch variations
 - **Duplicate prevention**: Won't spam you with the same deal twice
 - **Manage watches**: Easy interface to view and delete your watches
@@ -64,14 +64,13 @@ Optional:
 
 ### Deployment
 
-1. Deploy to Vercel
-2. Vercel Cron Jobs will automatically run based on `vercel.json`
-3. Monitor logs to ensure jobs are running correctly
+1. Deploy to Vercel (or your preferred host)
+2. Monitor logs to ensure manual operations are working correctly
 
 ## How It Works
 
-1. **User creates a watch**: User enters email, product name, and store
-2. **Cron job runs**: Every 4 hours, the system checks IKEA's API
+1. **User creates a watch**: User enters email, product ID, and target stores
+2. **Manual check**: From the Manage page, the user triggers a re-check when desired
 3. **Product matching**: Compares available products against user watches
 4. **Email notification**: Sends alert when a match is found
 5. **Duplicate prevention**: Records sent notifications to avoid spam
@@ -81,7 +80,6 @@ Optional:
 - `POST /api/watches` - Create a new watch
 - `GET /api/watches?email=xxx` - Get watches by email
 - `DELETE /api/watches/:id` - Delete a watch
-- `GET /api/check-deals` - Cron endpoint to check deals (secured)
 
 ## Development
 
@@ -93,7 +91,7 @@ npm install
 npm run dev
 
 # Manually trigger deal check
-curl http://localhost:3000/api/check-deals
+# Use the Manage page and click "Check now" beside any watch
 \`\`\`
 
 ## Email Integration
