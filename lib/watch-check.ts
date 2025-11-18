@@ -51,6 +51,24 @@ export interface FuelInfo {
   fuelUsage: number;
 }
 
+interface AggregatedEmailProduct {
+  name: string;
+  price: number;
+  originalPrice?: number;
+  imageUrl?: string;
+}
+
+export interface StoreCheckResult {
+  storeId: string;
+  storeName: string;
+  productsChecked: number;
+  availableMatches: number;
+  newMatchesAvailable: number;
+  requirementMet: boolean;
+  notificationsSent: number;
+  matches: AggregatedEmailProduct[];
+}
+
 export async function computeFuelInfo(
   profile: ProfileInfo | null | undefined,
   storeLat?: number,
@@ -139,92 +157,115 @@ export async function computeWatchMatches(
   };
 }
 
-export async function checkWatchAndNotify(
+export async function checkStoreWatches(
   supabase: SupabaseClient,
-  watch: WatchRecord,
+  watches: WatchRecord[],
   profile?: ProfileInfo | null
-): Promise<CheckWatchResult> {
-  const storeMeta = IKEA_STORES[watch.store_id as IkeaStoreId];
+): Promise<StoreCheckResult> {
+  if (watches.length === 0) {
+    return {
+      storeId: "",
+      storeName: "",
+      productsChecked: 0,
+      availableMatches: 0,
+      newMatchesAvailable: 0,
+      requirementMet: false,
+      notificationsSent: 0,
+      matches: [],
+    };
+  }
 
-  const fuelInfo = await computeFuelInfo(profile ?? null, storeMeta?.lat, storeMeta?.lng);
+  const storeId = watches[0].store_id;
+  const storeName = watches[0].store_name;
+  const storeMeta = IKEA_STORES[storeId as IkeaStoreId];
 
-  const { products, matches, unsentMatches, requiredQuantity } =
-    await computeWatchMatches(supabase, watch);
+  const products = await fetchIkeaDeals(storeId);
+  const plannedNotifications: Array<{
+    watch_id: string;
+    product_name: string;
+    product_price: number;
+    product_image?: string;
+    ikea_product_id: string;
+  }> = [];
+  const aggregatedProducts: AggregatedEmailProduct[] = [];
+  const seenProductIds = new Set<string>();
+  let totalMatches = 0;
+  let requirementMet = false;
 
-  let notificationsSent = 0;
-  const requirementMet = matches.length >= requiredQuantity;
+  for (const watch of watches) {
+    const { matches, unsentMatches, requiredQuantity } =
+      await computeWatchMatches(supabase, watch, { products });
 
-  if (unsentMatches.length >= requiredQuantity) {
-    const aggregatedProducts: Array<{
-      name: string;
-      price: number;
-      originalPrice?: number;
-      imageUrl?: string;
-    }> = [];
-    const plannedNotifications: Array<{
-      watch_id: string;
-      product_name: string;
-      product_price: number;
-      product_image?: string;
-      ikea_product_id: string;
-    }> = [];
-    const seenProductIds = new Set<string>();
-    const toNotify = unsentMatches.slice(0, requiredQuantity);
-
-    for (const product of toNotify) {
-      if (!seenProductIds.has(product.id)) {
-        aggregatedProducts.push({
-          name: product.name,
-          price: product.price,
-          originalPrice: product.originalPrice,
-          imageUrl: product.imageUrl,
-        });
-        seenProductIds.add(product.id);
-      }
-
-      plannedNotifications.push({
-        watch_id: watch.id,
-        product_name: product.name,
-        product_price: product.price,
-        product_image: product.imageUrl,
-        ikea_product_id: product.id,
-      });
+    totalMatches += matches.length;
+    if (matches.length >= requiredQuantity) {
+      requirementMet = true;
     }
 
-    if (aggregatedProducts.length > 0 && watch.email) {
-      const emailSent = await sendStoreSummaryAlert({
-        to: watch.email,
-        storeName: watch.store_name,
-        storeAddress: storeMeta?.address,
-        distanceKm: fuelInfo?.distanceKm ?? undefined,
-        fuelCost: fuelInfo?.fuelCost ?? undefined,
-        fuelPricePerLiter: fuelInfo?.fuelPricePerLiter ?? undefined,
-        fuelUsage: fuelInfo?.fuelUsage ?? undefined,
-        products: aggregatedProducts,
-      });
+    if (unsentMatches.length >= requiredQuantity) {
+      const toNotify = unsentMatches.slice(0, requiredQuantity);
 
-      if (emailSent && plannedNotifications.length > 0) {
-        const { error } = await supabase
-          .from("notifications")
-          .insert(plannedNotifications);
-
-        if (error) {
-          console.error("[v0] Error inserting notifications:", error);
-        } else {
-          notificationsSent = plannedNotifications.length;
+      for (const product of toNotify) {
+        if (!seenProductIds.has(product.id)) {
+          aggregatedProducts.push({
+            name: product.name,
+            price: product.price,
+            originalPrice: product.originalPrice,
+            imageUrl: product.imageUrl,
+          });
+          seenProductIds.add(product.id);
         }
+
+        plannedNotifications.push({
+          watch_id: watch.id,
+          product_name: product.name,
+          product_price: product.price,
+          product_image: product.imageUrl,
+          ikea_product_id: product.id,
+        });
+      }
+    }
+  }
+
+  let notificationsSent = 0;
+  if (aggregatedProducts.length > 0 && watches[0].email) {
+    const fuelInfo = await computeFuelInfo(
+      profile ?? null,
+      storeMeta?.lat,
+      storeMeta?.lng
+    );
+
+    const emailSent = await sendStoreSummaryAlert({
+      to: watches[0].email,
+      storeName,
+      storeAddress: storeMeta?.address,
+      distanceKm: fuelInfo?.distanceKm,
+      fuelCost: fuelInfo?.fuelCost,
+      fuelPricePerLiter: fuelInfo?.fuelPricePerLiter,
+      fuelUsage: fuelInfo?.fuelUsage,
+      products: aggregatedProducts,
+    });
+
+    if (emailSent && plannedNotifications.length > 0) {
+      const { error } = await supabase
+        .from("notifications")
+        .insert(plannedNotifications);
+
+      if (error) {
+        console.error("[v0] Error inserting notifications:", error);
+      } else {
+        notificationsSent = plannedNotifications.length;
       }
     }
   }
 
   return {
-    watchId: watch.id,
-    matches,
-    notificationsSent,
+    storeId,
+    storeName,
     productsChecked: products.length,
-    requiredQuantity,
+    availableMatches: totalMatches,
+    newMatchesAvailable: aggregatedProducts.length,
     requirementMet,
-    availableMatches: matches.length,
-    newMatchesAvailable: unsentMatches.length,
+    notificationsSent,
+    matches: aggregatedProducts,
   };
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { checkWatchAndNotify } from "@/lib/watch-check";
+import { checkStoreWatches, type WatchRecord } from "@/lib/watch-check";
 
 export async function POST(
   request: NextRequest,
@@ -42,7 +42,28 @@ export async function POST(
       .eq("user_id", user.id)
       .maybeSingle();
 
-    const result = await checkWatchAndNotify(supabase, watch, profile ?? undefined);
+    const { data: storeWatches, error: storeWatchesError } = await supabase
+      .from("watches")
+      .select(
+        "id,email,store_id,store_name,created_at,is_active,desired_quantity,article_number:product_name"
+      )
+      .eq("email", user.email)
+      .eq("store_id", watch.store_id)
+      .eq("is_active", true);
+
+    if (storeWatchesError) {
+      console.error("[v0] Error loading store watches:", storeWatchesError);
+      return NextResponse.json(
+        { error: "Failed to load watches for this store" },
+        { status: 500 }
+      );
+    }
+
+    const result = await checkStoreWatches(
+      supabase,
+      (storeWatches ?? []) as WatchRecord[],
+      profile ?? undefined
+    );
 
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
