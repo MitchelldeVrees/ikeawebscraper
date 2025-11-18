@@ -189,7 +189,7 @@ export async function sendStoreSummaryAlert(
     const response = await resendClient.emails.send({
       from:
         process.env.RESEND_FROM_EMAIL ||
-        "IKEA Tweedekansje Alerts <onboarding@resend.dev>",
+        "IKEA Tweedekansje Alerts <alerts@ikeatweedekans.com>",
       to: data.to,
       subject: `IKEA Deals at ${data.storeName}`,
       html: generateAggregatedEmailHtml(data),
