@@ -1,0 +1,9 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/check-watches",
+      "schedule": "0 7 * * *"
+    }
+  ]
+}
+

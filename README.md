@@ -66,6 +66,9 @@ Optional:
 
 1. Deploy to Vercel (or your preferred host)
 2. Monitor logs to ensure manual operations are working correctly
+3. For automatic daily checks, Vercel Cron is configured via `vercel.json` to call `/api/cron/check-watches` once per day.
+   - Adjust the `schedule` field in `vercel.json` to change the time (cron syntax, UTC).
+   - Optionally set `CRON_SECRET` and include `?secret=YOUR_VALUE` in the cron path for extra security.
 
 ## How It Works
 

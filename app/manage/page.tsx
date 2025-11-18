@@ -40,7 +40,9 @@ export default function ManagePage() {
   const { user, loading, session, supabase } = useAuth();
   const [watches, setWatches] = useState<WatchGroup[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingAll, setIsCheckingAll] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [checkAllMessage, setCheckAllMessage] = useState<string | null>(null);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [watchStatuses, setWatchStatuses] = useState<Record<string, WatchStatus>>({});
   const [articlePreviews, setArticlePreviews] = useState<
@@ -164,6 +166,83 @@ export default function ManagePage() {
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete watch");
+    }
+  };
+
+  const handleCheckAllProducts = async () => {
+    if (!user || !isVerified) {
+      return;
+    }
+
+    if (watches.length === 0) {
+      setCheckAllMessage("No watches to check yet.");
+      return;
+    }
+
+    // Limit to 4 full checks per user per day (client-side)
+    const CHECK_LIMIT_PER_DAY = 4;
+
+    if (typeof window !== "undefined") {
+      const identifier = user.id ?? user.email ?? "anonymous";
+      const storageKey = `watch-check-all-usage-${identifier}`;
+      const today = new Date().toISOString().slice(0, 10);
+
+      let record: { date: string; count: number } = {
+        date: today,
+        count: 0,
+      };
+
+      const raw = window.localStorage.getItem(storageKey);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw) as { date?: string; count?: number };
+          if (
+            parsed &&
+            typeof parsed.date === "string" &&
+            typeof parsed.count === "number"
+          ) {
+            record = {
+              date: parsed.date,
+              count: parsed.count,
+            };
+          }
+        } catch {
+          // Ignore parse errors and reset record
+        }
+      }
+
+      if (record.date === today && record.count >= CHECK_LIMIT_PER_DAY) {
+        setCheckAllMessage(
+          "You can only check all products 4 times per day."
+        );
+        return;
+      }
+
+      setIsCheckingAll(true);
+      setError(null);
+      setCheckAllMessage(null);
+
+      try {
+        for (const group of watches) {
+          // Reuse existing per-group logic so UI messages stay consistent
+          // eslint-disable-next-line no-await-in-loop
+          await handleCheckProduct(group);
+        }
+
+        const updated =
+          record.date === today
+            ? { date: today, count: record.count + 1 }
+            : { date: today, count: 1 };
+
+        window.localStorage.setItem(storageKey, JSON.stringify(updated));
+        setCheckAllMessage(
+          `Checked all products (${watches.length} article${
+            watches.length === 1 ? "" : "s"
+          }).`
+        );
+      } finally {
+        setIsCheckingAll(false);
+      }
     }
   };
 
@@ -329,14 +408,22 @@ export default function ManagePage() {
             )}
 
             <div className="flex flex-wrap items-center gap-4">
-              <Button onClick={fetchWatches} disabled={isLoading || !user || !isVerified}>
-                {isLoading ? (
+              <Button
+                onClick={handleCheckAllProducts}
+                disabled={
+                  isCheckingAll || !user || !isVerified || watches.length === 0
+                }
+              >
+                {isCheckingAll ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Refreshing...
+                    Checking all products...
                   </>
                 ) : (
-                  "Refresh Watches"
+                  <>
+                    <RefreshCcw className="mr-2 h-4 w-4" />
+                    Check all products
+                  </>
                 )}
               </Button>
               {user && (
@@ -366,6 +453,12 @@ export default function ManagePage() {
                 ? `Active Watches (${watches.length})`
                 : "No Active Watches"}
             </h2>
+
+            {checkAllMessage && (
+              <Alert>
+                <AlertDescription>{checkAllMessage}</AlertDescription>
+              </Alert>
+            )}
 
             {watches.length === 0 ? (
               <Card>
@@ -421,24 +514,6 @@ export default function ManagePage() {
                               </p>
                             </div>
                           </div>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => handleCheckProduct(group)}
-                            disabled={watchStatuses[group.article_number]?.isChecking}
-                          >
-                            {watchStatuses[group.article_number]?.isChecking ? (
-                              <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Checking...
-                              </>
-                            ) : (
-                              <>
-                                <RefreshCcw className="mr-2 h-4 w-4" />
-                                Check product
-                              </>
-                            )}
-                          </Button>
                         </div>
                         <div className="mt-4 space-y-3">
                           {group.stores.map((store) => (
