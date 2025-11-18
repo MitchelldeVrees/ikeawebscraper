@@ -5,7 +5,7 @@ import {
   matchLegacyProductName,
   type IkeaProduct,
 } from "@/lib/ikea-api";
-import { sendProductAlert } from "@/lib/email";
+import { sendStoreSummaryAlert } from "@/lib/email";
 import { IKEA_STORES, type IkeaStoreId } from "@/lib/ikea-stores";
 import { getDrivingDistanceKm } from "@/lib/distance";
 
@@ -155,31 +155,64 @@ export async function checkWatchAndNotify(
   const requirementMet = matches.length >= requiredQuantity;
 
   if (unsentMatches.length >= requiredQuantity) {
-    for (const product of unsentMatches.slice(0, requiredQuantity)) {
-      const emailSent = await sendProductAlert({
+    const aggregatedProducts: Array<{
+      name: string;
+      price: number;
+      originalPrice?: number;
+      imageUrl?: string;
+    }> = [];
+    const plannedNotifications: Array<{
+      watch_id: string;
+      product_name: string;
+      product_price: number;
+      product_image?: string;
+      ikea_product_id: string;
+    }> = [];
+    const seenProductIds = new Set<string>();
+    const toNotify = unsentMatches.slice(0, requiredQuantity);
+
+    for (const product of toNotify) {
+      if (!seenProductIds.has(product.id)) {
+        aggregatedProducts.push({
+          name: product.name,
+          price: product.price,
+          originalPrice: product.originalPrice,
+          imageUrl: product.imageUrl,
+        });
+        seenProductIds.add(product.id);
+      }
+
+      plannedNotifications.push({
+        watch_id: watch.id,
+        product_name: product.name,
+        product_price: product.price,
+        product_image: product.imageUrl,
+        ikea_product_id: product.id,
+      });
+    }
+
+    if (aggregatedProducts.length > 0 && watch.email) {
+      const emailSent = await sendStoreSummaryAlert({
         to: watch.email,
-        productName: product.name,
-        productPrice: product.price,
         storeName: watch.store_name,
-        productImage: product.imageUrl,
-        watchId: watch.id,
-        originalPrice: product.originalPrice,
+        storeAddress: storeMeta?.address,
         distanceKm: fuelInfo?.distanceKm ?? undefined,
         fuelCost: fuelInfo?.fuelCost ?? undefined,
         fuelPricePerLiter: fuelInfo?.fuelPricePerLiter ?? undefined,
         fuelUsage: fuelInfo?.fuelUsage ?? undefined,
-        storeAddress: storeMeta?.address,
+        products: aggregatedProducts,
       });
 
-      if (emailSent) {
-        await supabase.from("notifications").insert({
-          watch_id: watch.id,
-          product_name: product.name,
-          product_price: product.price,
-          product_image: product.imageUrl,
-          ikea_product_id: product.id,
-        });
-        notificationsSent++;
+      if (emailSent && plannedNotifications.length > 0) {
+        const { error } = await supabase
+          .from("notifications")
+          .insert(plannedNotifications);
+
+        if (error) {
+          console.error("[v0] Error inserting notifications:", error);
+        } else {
+          notificationsSent = plannedNotifications.length;
+        }
       }
     }
   }
