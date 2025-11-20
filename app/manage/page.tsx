@@ -36,6 +36,13 @@ type WatchStatus = {
   type?: "success" | "error";
 };
 
+type StoreCheckCacheEntry = {
+  ok: boolean;
+  availableMatches?: number;
+  requirementMet?: boolean;
+  error?: string;
+};
+
 export default function ManagePage() {
   const { user, loading, session, supabase } = useAuth();
   const [watches, setWatches] = useState<WatchGroup[]>([]);
@@ -211,23 +218,68 @@ export default function ManagePage() {
         }
       }
 
-      if (record.date === today && record.count >= CHECK_LIMIT_PER_DAY) {
-        setCheckAllMessage(
-          "You can only check all products 4 times per day."
-        );
-        return;
-      }
+      // if (record.date === today && record.count >= CHECK_LIMIT_PER_DAY) {
+      //   setCheckAllMessage(
+      //     "You can only check all products 4 times per day."
+      //   );
+      //   return;
+      // }
 
       setIsCheckingAll(true);
       setError(null);
       setCheckAllMessage(null);
 
+      const storeCheckCache = new Map<
+        string,
+        Promise<StoreCheckCacheEntry>
+      >();
+
       try {
         for (const group of watches) {
           // Reuse existing per-group logic so UI messages stay consistent
           // eslint-disable-next-line no-await-in-loop
-          await handleCheckProduct(group);
+          await handleCheckProduct(group, storeCheckCache);
         }
+
+        const storeResults = await Promise.all(storeCheckCache.values());
+        const storesChecked = storeResults.length;
+        let totalMatches = 0;
+        let storesWithMatches = 0;
+        let requirementMet = false;
+
+        for (const result of storeResults) {
+          if (!result || !result.ok) {
+            continue;
+          }
+
+          const matches = result.availableMatches ?? 0;
+          totalMatches += matches;
+
+          if (matches > 0) {
+            storesWithMatches += 1;
+          }
+
+          if (result.requirementMet) {
+            requirementMet = true;
+          }
+        }
+
+        const summaryParts: string[] = [];
+        summaryParts.push(
+          `Checked ${storesChecked} ${storesChecked === 1 ? "store" : "stores"}.`
+        );
+        summaryParts.push(
+          `Matched ${totalMatches} ${totalMatches === 1 ? "deal" : "deals"}${
+            storesWithMatches > 0
+              ? ` across ${storesWithMatches} ${
+                  storesWithMatches === 1 ? "store" : "stores"
+                }`
+              : ""
+          }.`
+        );
+        summaryParts.push(
+          requirementMet ? "Requirement met." : "Requirement not met."
+        );
 
         const updated =
           record.date === today
@@ -235,18 +287,17 @@ export default function ManagePage() {
             : { date: today, count: 1 };
 
         window.localStorage.setItem(storageKey, JSON.stringify(updated));
-        setCheckAllMessage(
-          `Checked all products (${watches.length} article${
-            watches.length === 1 ? "" : "s"
-          }).`
-        );
+        setCheckAllMessage(summaryParts.join(" "));
       } finally {
         setIsCheckingAll(false);
       }
     }
   };
 
-  const handleCheckProduct = async (group: WatchGroup) => {
+  const handleCheckProduct = async (
+    group: WatchGroup,
+    storeCheckCache?: Map<string, Promise<StoreCheckCacheEntry>>
+  ) => {
     const key = group.article_number;
     setWatchStatuses((prev) => ({
       ...prev,
@@ -268,39 +319,70 @@ export default function ManagePage() {
     }> = [];
     const failedStores: string[] = [];
 
-    for (const store of group.stores) {
-      try {
-        const response = await fetch(`/api/watches/${store.id}/check`, {
-          method: "POST",
-          headers,
-        });
+    const runStoreCheck = (store: StoreWatch) => {
+      const cacheKey = String(store.store_id ?? store.id);
+      const execute = async (): Promise<StoreCheckCacheEntry> => {
+        try {
+          const response = await fetch(`/api/watches/${store.id}/check`, {
+            method: "POST",
+            headers,
+          });
 
-        const data = await response.json();
+          const data = await response.json();
 
-        if (!response.ok) {
-          failedStores.push(store.store_name);
-          continue;
+          if (!response.ok) {
+            return { ok: false, error: data?.error ?? "Failed to check store" };
+          }
+
+          return {
+            ok: true,
+            availableMatches:
+              typeof data.availableMatches === "number"
+                ? data.availableMatches
+                : Array.isArray(data.matches)
+                ? data.matches.length
+                : undefined,
+            requirementMet:
+              typeof data.requirementMet === "boolean"
+                ? data.requirementMet
+                : undefined,
+          };
+        } catch (error) {
+          console.error(
+            `[v0] Error checking watch ${store.id} for ${group.article_number}:`,
+            error
+          );
+          return {
+            ok: false,
+            error: error instanceof Error ? error.message : "Unknown error",
+          };
         }
+      };
 
-        results.push({
-          availableMatches:
-            typeof data.availableMatches === "number"
-              ? data.availableMatches
-              : Array.isArray(data.matches)
-              ? data.matches.length
-              : undefined,
-          requirementMet:
-            typeof data.requirementMet === "boolean"
-              ? data.requirementMet
-              : undefined,
-        });
-      } catch (error) {
-        console.error(
-          `[v0] Error checking watch ${store.id} for ${group.article_number}:`,
-          error
-        );
-        failedStores.push(store.store_name);
+      if (!storeCheckCache) {
+        return execute();
       }
+
+      let promise = storeCheckCache.get(cacheKey);
+      if (!promise) {
+        promise = execute();
+        storeCheckCache.set(cacheKey, promise);
+      }
+      return promise;
+    };
+
+    for (const store of group.stores) {
+      const result = await runStoreCheck(store);
+
+      if (!result.ok) {
+        failedStores.push(store.store_name);
+        continue;
+      }
+
+      results.push({
+        availableMatches: result.availableMatches,
+        requirementMet: result.requirementMet,
+      });
     }
 
     const totalMatches = results.reduce(
@@ -308,48 +390,13 @@ export default function ManagePage() {
       0
     );
     const requirementMet = results.some((res) => res.requirementMet);
-    const messageParts: string[] = [
-      `Checked ${group.stores.length} ${
-        group.stores.length === 1 ? "store" : "stores"
-      }.`,
-    ];
+   
 
-    if (totalMatches > 0) {
-      messageParts.push(
-        `Matched ${totalMatches} ${
-          totalMatches === 1 ? "deal" : "deals"
-        } across ${results.length} ${
-          results.length === 1 ? "store" : "stores"
-        }.`
-      );
-    } else {
-      messageParts.push("No matching Tweedekansje deals found right now.");
-    }
+    
 
-    if (requirementMet) {
-      messageParts.push("Requirement met.");
-    }
+    
 
-    if (failedStores.length > 0) {
-      messageParts.push(
-        `Failed to check ${failedStores.length} ${
-          failedStores.length === 1 ? "store" : "stores"
-        }: ${failedStores.join(", ")}.`
-      );
-    }
-
-    const statusMessage = messageParts.join(" ");
-    const statusType: WatchStatus["type"] =
-      requirementMet || failedStores.length > 0 ? (requirementMet ? "success" : "error") : undefined;
-
-    setWatchStatuses((prev) => ({
-      ...prev,
-      [key]: {
-        isChecking: false,
-        message: statusMessage,
-        type: statusType,
-      },
-    }));
+   
   };
 
 
@@ -442,6 +489,12 @@ export default function ManagePage() {
                 </div>
               )}
             </div>
+
+            {checkAllMessage && (
+              <Alert>
+                <AlertDescription>{checkAllMessage}</AlertDescription>
+              </Alert>
+            )}
           </CardContent>
         </Card>
 
@@ -453,12 +506,6 @@ export default function ManagePage() {
                 ? `Active Watches (${watches.length})`
                 : "No Active Watches"}
             </h2>
-
-            {checkAllMessage && (
-              <Alert>
-                <AlertDescription>{checkAllMessage}</AlertDescription>
-              </Alert>
-            )}
 
             {watches.length === 0 ? (
               <Card>

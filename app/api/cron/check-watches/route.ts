@@ -11,9 +11,17 @@ import { sendStoreSummaryAlert } from "@/lib/email";
 import { fetchIkeaDeals } from "@/lib/ikea-api";
 
 export const dynamic = "force-dynamic";
+const CRON_TEMP_DISABLED = true;
 
 export async function GET(request: NextRequest) {
   try {
+    if (CRON_TEMP_DISABLED) {
+      return NextResponse.json(
+        { message: "Cron check temporarily disabled" },
+        { status: 503 }
+      );
+    }
+
     const secret = process.env.CRON_SECRET;
     if (secret) {
       const url = new URL(request.url);

@@ -106,10 +106,15 @@ export async function computeFuelInfo(
   };
 }
 
+type ComputeWatchMatchesOptions = {
+  products?: IkeaProduct[];
+  skipNotificationCheck?: boolean;
+};
+
 export async function computeWatchMatches(
   supabase: SupabaseClient,
   watch: WatchRecord,
-  options?: { products?: IkeaProduct[] }
+  options?: ComputeWatchMatchesOptions
 ): Promise<WatchMatchComputation> {
   const requiredQuantity =
     watch.desired_quantity && watch.desired_quantity > 0
@@ -118,6 +123,7 @@ export async function computeWatchMatches(
 
   const products =
     options?.products ?? (await fetchIkeaDeals(watch.store_id));
+  const skipNotificationCheck = options?.skipNotificationCheck ?? false;
 
   const matches: IkeaProduct[] = [];
   const unsentMatches: IkeaProduct[] = [];
@@ -136,6 +142,11 @@ export async function computeWatchMatches(
     }
 
     matches.push(product);
+
+    if (skipNotificationCheck) {
+      unsentMatches.push(product);
+      continue;
+    }
 
     const { data: existingNotification } = await supabase
       .from("notifications")
@@ -157,10 +168,15 @@ export async function computeWatchMatches(
   };
 }
 
+type CheckStoreWatchesOptions = {
+  skipNotificationCheck?: boolean;
+};
+
 export async function checkStoreWatches(
   supabase: SupabaseClient,
   watches: WatchRecord[],
-  profile?: ProfileInfo | null
+  profile?: ProfileInfo | null,
+  options?: CheckStoreWatchesOptions
 ): Promise<StoreCheckResult> {
   if (watches.length === 0) {
     return {
@@ -191,10 +207,14 @@ export async function checkStoreWatches(
   const seenProductIds = new Set<string>();
   let totalMatches = 0;
   let requirementMet = false;
+  const skipNotificationCheck = options?.skipNotificationCheck ?? false;
 
   for (const watch of watches) {
     const { matches, unsentMatches, requiredQuantity } =
-      await computeWatchMatches(supabase, watch, { products });
+      await computeWatchMatches(supabase, watch, {
+        products,
+        skipNotificationCheck,
+      });
 
     totalMatches += matches.length;
     if (matches.length >= requiredQuantity) {

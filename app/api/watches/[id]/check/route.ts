@@ -62,7 +62,8 @@ export async function POST(
     const result = await checkStoreWatches(
       supabase,
       (storeWatches ?? []) as WatchRecord[],
-      profile ?? undefined
+      profile ?? undefined,
+      { skipNotificationCheck: true }
     );
 
     return NextResponse.json(result, { status: 200 });
