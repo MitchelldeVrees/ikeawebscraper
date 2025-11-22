@@ -29,7 +29,7 @@ export default function Home() {
             Never Miss an IKEA Deal Again
           </h2>
           <p className="text-xl text-muted-foreground mb-8 text-pretty">
-            Get instant email alerts when your favorite IKEA products appear on Tweedekansje with huge discounts.
+            Get instant email alerts when your favorite IKEA products appear on Tweede kans with huge discounts.
             Perfect for finding as-is items and open box deals.
           </p>
 

@@ -17,8 +17,8 @@ const baseUrl = 'https://ikeatweedekans.com/';
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: 'IKEA Tweedekansje Alerts',
-    template: '%s | IKEA Tweedekansje Alerts',
+    default: 'IKEA Tweede Kans Alerts',
+    template: '%s | IKEA Tweede Kans Alerts',
   },
   description:
     'Track your favorite IKEA Tweedekansje (tweede kans) products and get notified instantly when they are available across stores in the Netherlands.',
