@@ -156,7 +156,7 @@ interface AccountData {
 export default function AccountPage() {
   const { user, session, supabase } = useAuth();
   const { resolvedTheme, setTheme } = useTheme();
-  const [language, setLanguage] = useState<Language>("en");
+  const [language, setLanguage] = useState<Language>("nl");
   const t = translations[language];
 
   const [data, setData] = useState<AccountData | null>(null);

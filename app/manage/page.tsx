@@ -266,19 +266,21 @@ export default function ManagePage() {
 
         const summaryParts: string[] = [];
         summaryParts.push(
-          `Checked ${storesChecked} ${storesChecked === 1 ? "store" : "stores"}.`
+          `Gecontroleerd ${storesChecked} winkel${storesChecked === 1 ? "" : "s"}.`
         );
+
+        if (totalMatches > 0) {
+          summaryParts.push(
+            `Gevonden ${totalMatches} deal${
+              totalMatches === 1 ? "" : "s"
+            }${storesWithMatches > 0 ? ` in ${storesWithMatches} winkel${storesWithMatches === 1 ? "" : "s"}.` : "."}`
+          );
+        } else {
+          summaryParts.push("Geen matching Tweedekansje deals gevonden.");
+        }
+
         summaryParts.push(
-          `Matched ${totalMatches} ${totalMatches === 1 ? "deal" : "deals"}${
-            storesWithMatches > 0
-              ? ` across ${storesWithMatches} ${
-                  storesWithMatches === 1 ? "store" : "stores"
-                }`
-              : ""
-          }.`
-        );
-        summaryParts.push(
-          requirementMet ? "Requirement met." : "Requirement not met."
+          requirementMet ? "Vereiste behaald." : "Vereiste niet behaald."
         );
 
         const updated =
@@ -412,15 +414,15 @@ export default function ManagePage() {
           </Button>
           <div className="flex items-center gap-2">
             <Package className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold">Manage Your Watches</h1>
+            <h1 className="text-2xl font-bold">Beheer je watches</h1>
           </div>
         </div>
 
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>Your Watches</CardTitle>
+            <CardTitle>Je watches</CardTitle>
             <CardDescription>
-              View and manage the IKEA article numbers you are tracking.
+              Bekijk en beheer de IKEA artikelnummer die je volgt.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -434,14 +436,14 @@ export default function ManagePage() {
               <Alert className="bg-blue-50 border-blue-200 text-blue-900">
                 <AlertDescription className="flex items-center justify-between gap-4">
                   <span>
-                    Please sign in to access your watches.
+                    Log in om toegang te krijgen tot je watches.
                   </span>
                   <Button asChild variant="secondary">
-                    <Link href="/login" className="flex items-center gap-2">
-                      <LogIn className="h-4 w-4" />
-                      Sign in
-                    </Link>
-                  </Button>
+                      <Link href="/login" className="flex items-center gap-2">
+                        <LogIn className="h-4 w-4" />
+                        Inloggen
+                      </Link>
+                    </Button>
                 </AlertDescription>
               </Alert>
             )}
@@ -449,34 +451,34 @@ export default function ManagePage() {
             {user && !isVerified && (
               <Alert className="bg-amber-50 border-amber-200 text-amber-900">
                 <AlertDescription>
-                  Please verify <strong>{user.email}</strong> via the link in your inbox before managing watches.
+                  Verifieer <strong>{user.email}</strong> via de link in je inbox voordat je watches beheert.
                 </AlertDescription>
               </Alert>
             )}
 
             <div className="flex flex-wrap items-center gap-4">
-              <Button
-                onClick={handleCheckAllProducts}
-                disabled={
-                  isCheckingAll || !user || !isVerified || watches.length === 0
-                }
-              >
-                {isCheckingAll ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Checking all products...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCcw className="mr-2 h-4 w-4" />
-                    Check all products
-                  </>
-                )}
-              </Button>
+                <Button
+                  onClick={handleCheckAllProducts}
+                  disabled={
+                    isCheckingAll || !user || !isVerified || watches.length === 0
+                  }
+                >
+                  {isCheckingAll ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Alle producten worden gecontroleerd...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCcw className="mr-2 h-4 w-4" />
+                      Controleer alle producten
+                    </>
+                  )}
+                </Button>
               {user && (
                 <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                   <p>
-                    Signed in as <span className="font-medium">{user.email}</span>
+                    Ingelogd als <span className="font-medium">{user.email}</span>
                   </p>
                   <Button
                     type="button"
@@ -484,7 +486,7 @@ export default function ManagePage() {
                     variant="secondary"
                     onClick={() => supabase.auth.signOut()}
                   >
-                    Sign out
+                    Uitloggen
                   </Button>
                 </div>
               )}
@@ -503,15 +505,15 @@ export default function ManagePage() {
           <div>
             <h2 className="text-xl font-semibold mb-4">
               {watches.length > 0
-                ? `Active Watches (${watches.length})`
-                : "No Active Watches"}
+                ? `Actieve watches (${watches.length})`
+                : "Geen actieve watches"}
             </h2>
 
             {watches.length === 0 ? (
               <Card>
                 <CardContent className="pt-6">
                   <p className="text-center text-muted-foreground">
-                    No active watches found for this email address.
+                    Geen actieve watches gevonden voor dit e-mailadres.
                   </p>
                 </CardContent>
               </Card>
@@ -540,7 +542,7 @@ export default function ManagePage() {
                           <div className="flex-1">
                             <h3 className="font-semibold text-lg">{displayName}</h3>
                             <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                              Article {group.article_number}
+                              Artikel {group.article_number}
                             </p>
                           </div>
                         </div>
@@ -548,11 +550,11 @@ export default function ManagePage() {
                           <div className="flex-1">
                             <div className="space-y-1 text-sm text-muted-foreground">
                               <p>
-                                <span className="font-medium">Minimum quantity:</span>{" "}
+                                <span className="font-medium">Minimale hoeveelheid:</span>{" "}
                                 {group.desired_quantity ?? 1}
                               </p>
                               <p>
-                                <span className="font-medium">Created:</span>{" "}
+                                <span className="font-medium">Aangemaakt op:</span>{" "}
                                 {new Date(group.created_at).toLocaleDateString("nl-NL", {
                                   year: "numeric",
                                   month: "long",
@@ -569,15 +571,15 @@ export default function ManagePage() {
                               className="rounded border p-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between"
                             >
                               <div>
-                                <p className="font-medium">{store.store_name}</p>
-                                <p className="text-sm text-muted-foreground">
-                                  Added on{" "}
-                                  {new Date(store.created_at).toLocaleDateString("nl-NL", {
-                                    year: "numeric",
-                                    month: "long",
-                                    day: "numeric",
-                                  })}
-                                </p>
+                              <p className="font-medium">{store.store_name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                Toegevoegd op{" "}
+                                {new Date(store.created_at).toLocaleDateString("nl-NL", {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                })}
+                              </p>
                               </div>
                               <div className="flex items-center gap-2">
                                 <Button

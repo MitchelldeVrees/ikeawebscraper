@@ -55,12 +55,12 @@ export function WatchForm() {
   );
   const articleValidationMessage =
     articleValidationStatus === "checking"
-      ? "Verifying article number..."
+      ? "Artikelnummer wordt gecontroleerd..."
       : articleValidationStatus === "invalid"
-      ? articleValidationReason ?? "Incorrect product id."
+      ? articleValidationReason ?? "Onjuist artikelnummer."
       : articleValidationStatus === "valid"
-      ? "Product id confirmed."
-      : "Use the 8-digit IKEA article number from the product page.";
+      ? "Artikelnummer bevestigd."
+      : "Gebruik het 8-cijferige IKEA artikelnummer van de productpagina.";
   const articleValidationMessageClass = cn(
     articleValidationStatus === "invalid" && "text-destructive",
     articleValidationStatus === "valid" && "text-emerald-600",
@@ -86,7 +86,7 @@ export function WatchForm() {
       verifyingArticleRef.current = null;
       setArticleValidationStatus("invalid");
       setArticleValidationReason(
-        "Article number must contain 8 digits (e.g., 50487857)."
+        "Artikelnummer moet uit 8 cijfers bestaan (bijv. 50487857)."
       );
       setProductPreview(null);
       return;
@@ -127,7 +127,7 @@ export function WatchForm() {
       if (!preview) {
         verifyingArticleRef.current = null;
         setArticleValidationStatus("invalid");
-        setArticleValidationReason("Incorrect product id.");
+      setArticleValidationReason("Onjuist artikelnummer.");
         setProductPreview(null);
         return;
       }
@@ -135,7 +135,7 @@ export function WatchForm() {
       console.error("[v0] fetchProductPreview error:", error);
       verifyingArticleRef.current = null;
       setArticleValidationStatus("invalid");
-      setArticleValidationReason("Unable to verify the product right now.");
+      setArticleValidationReason("Dit product kon nu niet worden geverifieerd.");
       setProductPreview(null);
       return;
     }
@@ -174,31 +174,31 @@ export function WatchForm() {
     const cleanedArticleNumber = articleNumber.replace(/\D/g, "");
 
     if (!user) {
-      setError("You need to be logged in to create watches.");
+      setError("Je moet ingelogd zijn om watches aan te maken.");
       setIsLoading(false);
       return;
     }
 
     if (!isVerified) {
-      setError("Please verify your email before creating watches.");
+      setError("Verifieer je e-mail voordat je watches aanmaakt.");
       setIsLoading(false);
       return;
     }
 
     if (selectedStores.length === 0) {
-      setError("Select at least one IKEA store.");
+      setError("Selecteer minimaal één IKEA-winkel.");
       setIsLoading(false);
       return;
     }
 
     if (cleanedArticleNumber.length !== 8) {
-      setError("Article number must contain 8 digits (e.g., 50487857).");
+      setError("Artikelnummer moet 8 cijfers bevatten (bijv. 50487857).");
       setIsLoading(false);
       return;
     }
 
     if (articleValidationStatus !== "valid") {
-      setError("Verify the IKEA article number before creating a watch.");
+      setError("Controleer het IKEA artikelnummer voordat je een watch aanmaakt.");
       setIsLoading(false);
       return;
     }
@@ -234,7 +234,7 @@ export function WatchForm() {
       setDesiredQuantity(1);
       resetArticleValidation();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : "Er is iets misgegaan.");
     } finally {
       setIsLoading(false);
     }
@@ -248,7 +248,7 @@ export function WatchForm() {
       .filter((line) => line.length > 0);
 
     if (lines.length === 0) {
-      throw new Error("CSV file is empty.");
+      throw new Error("CSV-bestand is leeg.");
     }
 
     const headerColumns = lines[0]
@@ -259,7 +259,7 @@ export function WatchForm() {
     const quantityIndex = headerColumns.indexOf("quantity");
 
     if (productIndex === -1 || quantityIndex === -1) {
-      throw new Error("Headers must include 'productid' and 'quantity'.");
+      throw new Error("De kolomtitels moeten 'productid' en 'quantity' bevatten.");
     }
 
     const entries: Array<{ articleNumber: string; desiredQuantity: number }> = [];
@@ -292,7 +292,7 @@ export function WatchForm() {
     }
 
     if (entries.length === 0) {
-      throw new Error("No product rows found in CSV.");
+      throw new Error("Geen productregels gevonden in de CSV.");
     }
 
     return entries;
@@ -300,22 +300,22 @@ export function WatchForm() {
 
   const handleImportCsv = async () => {
     if (!csvFile) {
-      setCsvError("Choose a CSV file to import.");
+      setCsvError("Kies een CSV-bestand om te importeren.");
       return;
     }
 
     if (selectedCsvStores.length === 0) {
-      setCsvError("Select at least one IKEA store.");
+      setCsvError("Selecteer minimaal één IKEA-winkel.");
       return;
     }
 
     if (!user) {
-      setCsvError("Sign in to import watches.");
+      setCsvError("Log in om watches te importeren.");
       return;
     }
 
     if (!isVerified) {
-      setCsvError("Please verify your email before importing watches.");
+      setCsvError("Verifieer je e-mail voordat je watches importeert.");
       return;
     }
 
@@ -347,18 +347,18 @@ export function WatchForm() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to import watches");
+        throw new Error(data.error || "Importeren van watches is mislukt.");
       }
 
       setCsvStatus(
         data.imported
-          ? `Imported ${data.imported} watch${data.imported === 1 ? "" : "es"}.`
-          : "Import complete."
+          ? `Geïmporteerd ${data.imported} watch${data.imported === 1 ? "" : "es"}.`
+          : "Import voltooid."
       );
       setCsvFile(null);
       setSelectedCsvStores([]);
     } catch (err) {
-      setCsvError(err instanceof Error ? err.message : "Import failed");
+      setCsvError(err instanceof Error ? err.message : "Import mislukt.");
     } finally {
       setIsImporting(false);
     }
@@ -367,26 +367,26 @@ export function WatchForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Create a Product Watch</CardTitle>
+        <CardTitle>Maak een productwaarschuwing</CardTitle>
         <CardDescription>
-          Track IKEA article numbers manually or import them in bulk.
+          Volg IKEA artikelnummer handmatig of importeer ze in bulk.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="manual">
           <TabsList className="mb-4">
-            <TabsTrigger value="manual">Manual</TabsTrigger>
-            <TabsTrigger value="csv">Bulk Upload</TabsTrigger>
+            <TabsTrigger value="manual">Handmatig</TabsTrigger>
+            <TabsTrigger value="csv">CSV-upload</TabsTrigger>
           </TabsList>
 
           <TabsContent value="manual">
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="article">Article Number</Label>
+            <div className="space-y-2">
+              <Label htmlFor="article">Artikelnummer</Label>
                 <Input
                   id="article"
                   type="text"
-                  placeholder="e.g., 50487857 or 504.878.57"
+                  placeholder="bijv. 50487857 of 504.878.57"
                   value={articleNumber}
                   onChange={(e) => {
                     setArticleNumber(e.target.value);
@@ -402,9 +402,9 @@ export function WatchForm() {
                 </p>
                 {productPreview?.imageUrl && (
                   <div className="mt-2 flex items-start gap-3">
-                    <Image
-                      src={productPreview.imageUrl}
-                      alt={productPreview.name ?? "Product preview"}
+                      <Image
+                        src={productPreview.imageUrl}
+                        alt={productPreview.name ?? "Productvoorbeeld"}
                       width={96}
                       height={96}
                       className="h-16 w-16 rounded border object-cover"
@@ -429,14 +429,14 @@ export function WatchForm() {
                         </p>
                       )}
                       {productPreview.pipUrl && (
-                        <a
-                          href={productPreview.pipUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-xs text-blue-600 underline"
-                        >
-                          View on IKEA
-                        </a>
+                          <a
+                            href={productPreview.pipUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-xs text-blue-600 underline"
+                          >
+                            Bekijk op IKEA
+                          </a>
                       )}
                     </div>
                   </div>
@@ -444,7 +444,7 @@ export function WatchForm() {
               </div>
 
               <div className="space-y-2">
-                <Label>Select IKEA Stores</Label>
+                <Label>Kies IKEA-winkels</Label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {Object.entries(IKEA_STORES).map(([id, store]) => (
                     <label
@@ -466,12 +466,12 @@ export function WatchForm() {
                   ))}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Select one or more stores you want to monitor.
+                  Selecteer één of meer winkels die je wilt volgen.
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="quantity">Minimum Availability</Label>
+                <Label htmlFor="quantity">Minimale beschikbaarheid</Label>
                 <Input
                   id="quantity"
                   type="number"
@@ -482,7 +482,7 @@ export function WatchForm() {
                   }
                 />
                 <p className="text-xs text-muted-foreground">
-                  Alert me when at least this many matching products are available.
+                  Waarschuw mij wanneer minstens dit aantal producten beschikbaar is.
                 </p>
               </div>
 
@@ -496,7 +496,7 @@ export function WatchForm() {
                 <Alert className="bg-green-50 text-green-900 border-green-200">
                   <CheckCircle2 className="h-4 w-4" />
                   <AlertDescription>
-                    Watches created successfully! You&apos;ll receive an email when your product appears in any selected store.
+                    Watch succesvol aangemaakt! Je ontvangt een e-mail zodra je product in een geselecteerde winkel verschijnt.
                   </AlertDescription>
                 </Alert>
               )}
@@ -504,11 +504,7 @@ export function WatchForm() {
               {!user && !loading && (
                 <Alert className="bg-blue-50 border-blue-200 text-blue-900">
                   <AlertDescription>
-                    <span className="font-medium">Heads up:</span> please{" "}
-                    <Link href="/login" className="underline">
-                      sign in or create an account
-                    </Link>{" "}
-                    to create watches.
+                    <span className="font-medium">Let op:</span> log in of maak een account aan om watches te maken.
                   </AlertDescription>
                 </Alert>
               )}
@@ -516,7 +512,7 @@ export function WatchForm() {
               {!isVerified && user && (
                 <Alert className="bg-amber-50 border-amber-200 text-amber-900">
                   <AlertDescription>
-                    Check your inbox to verify <strong>{user.email}</strong> before creating watches.
+                    Controleer je inbox om <strong>{user.email}</strong> te verifiëren voordat je watches maakt.
                   </AlertDescription>
                 </Alert>
               )}
@@ -535,12 +531,12 @@ export function WatchForm() {
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating Watch...
+                    Watch wordt aangemaakt...
                   </>
                 ) : (
-                  "Create Watch"
+                  "Maak watch aan"
                 )}
-              </Button>
+             </Button>
             </form>
           </TabsContent>
 
@@ -549,11 +545,11 @@ export function WatchForm() {
               {!user && (
                 <Alert className="bg-blue-50 border-blue-200 text-blue-900">
                   <AlertDescription className="flex items-center justify-between gap-4">
-                    <span>Sign in to use CSV import.</span>
+                    <span>Log in om CSV-import te gebruiken.</span>
                     <Button asChild variant="secondary">
                       <Link href="/login" className="flex items-center gap-2">
                         <LogIn className="h-4 w-4" />
-                        Sign in
+                        Inloggen
                       </Link>
                     </Button>
                   </AlertDescription>
@@ -563,7 +559,7 @@ export function WatchForm() {
               {user && !isVerified && (
                 <Alert className="bg-amber-50 border-amber-200 text-amber-900">
                   <AlertDescription>
-                    Please verify <strong>{user.email}</strong> before importing watches.
+                    Verifieer <strong>{user.email}</strong> voordat je watches importeert.
                   </AlertDescription>
                 </Alert>
               )}
@@ -571,11 +567,11 @@ export function WatchForm() {
               <div className="flex flex-wrap gap-3">
                 <Button asChild variant="outline">
                   <a href="/api/watches/template" download>
-                    Download CSV Template
+                    Download CSV-sjabloon
                   </a>
                 </Button>
                 <div className="flex-1 min-w-[220px]">
-                  <Label htmlFor="csv-upload">CSV File</Label>
+                  <Label htmlFor="csv-upload">CSV-bestand</Label>
                   <Input
                     id="csv-upload"
                     type="file"
@@ -589,14 +585,14 @@ export function WatchForm() {
                   />
                   {csvFile && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      Selected: {csvFile.name}
+                      Geselecteerd: {csvFile.name}
                     </p>
                   )}
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label>Select IKEA Stores</Label>
+                <Label>Kies IKEA-winkels</Label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {Object.entries(IKEA_STORES).map(([id, store]) => (
                     <label
@@ -647,12 +643,12 @@ export function WatchForm() {
                 {isImporting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Importing...
+                    Importeren...
                   </>
                 ) : (
                   <>
                     <Upload className="mr-2 h-4 w-4" />
-                    Import CSV
+                    Importeer CSV
                   </>
                 )}
               </Button>

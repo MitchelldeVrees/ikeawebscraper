@@ -35,6 +35,7 @@ export interface IkeaProduct {
   imageUrl?: string;
   storeId: string;
   articleNumbers: string[];
+  offerId?: number;
   originalPrice?: number;
 }
 
@@ -94,6 +95,7 @@ export async function fetchIkeaDeals(storeId: string): Promise<IkeaProduct[]> {
             imageUrl: entry.heroImage || entry.media?.[0]?.url,
             storeId: entry.storeId || storeId,
             articleNumbers,
+            offerId: offer?.id,
             originalPrice:
               entry.originalPrice ??
               entry.maxPrice ??
