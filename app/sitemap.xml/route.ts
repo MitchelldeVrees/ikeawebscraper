@@ -4,10 +4,10 @@ const routes = [
   { path: "/", priority: 1 },
   { path: "/guide-to-ikea-tweede-kans", priority: 0.8 },
   { path: "/ikea-tweede-kans-faq", priority: 0.7 },
-  { path: "/manage", priority: 0.1 },
-  { path: "/account", priority: 0.1 },
-  { path: "/login", priority: 0.1 },
-  { path: "/reset-password", priority: 0.1 },
+  { path: "/manage", priority: 0.6 },
+  { path: "/account", priority: 0.6 },
+  { path: "/login", priority: 0.5 },
+  { path: "/reset-password", priority: 0.5 },
 ];
 
 function formatDate(date: Date) {
