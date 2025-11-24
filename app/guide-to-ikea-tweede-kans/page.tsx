@@ -27,9 +27,10 @@ const storesToScan = Object.entries(IKEA_STORES).slice(0, 6);
 async function getBestDeals(): Promise<BestDealRow[]> {
   const candidates: BestDealRow[] = [];
 
-  for (const [storeId, store] of storesToScan) {
-    try {
-      const products = await fetchIkeaDeals(storeId);
+  await Promise.all(
+    storesToScan.map(async ([storeId, store]) => {
+      try {
+        const products = await fetchIkeaDeals(storeId);
 
         for (const product of products) {
           const priceNow =
@@ -37,53 +38,55 @@ async function getBestDeals(): Promise<BestDealRow[]> {
             product.minPrice ??
             product.maxPrice ??
             undefined;
-        const originalPrice =
-          product.originalPrice ??
-          product.maxPrice ??
-          product.minPrice ??
-          priceNow;
+          const originalPrice =
+            product.originalPrice ??
+            product.maxPrice ??
+            product.minPrice ??
+            priceNow;
 
-        if (
-          typeof priceNow !== "number" ||
-          typeof originalPrice !== "number"
-        ) {
-          continue;
+          if (
+            typeof priceNow !== "number" ||
+            typeof originalPrice !== "number"
+          ) {
+            continue;
+          }
+
+          const savings = originalPrice - priceNow;
+          if (savings <= 1) {
+            continue;
+          }
+
+          const offerId = product.offerId ?? product.offers?.[0]?.id;
+          const resolvedUrl =
+            product.pipUrl?.startsWith("http") ?? false
+              ? product.pipUrl
+              : product.pipUrl
+              ? `https://www.ikea.com${product.pipUrl}`
+              : undefined;
+
+          candidates.push({
+            id: `${storeId}-${product.id}-${offerId ?? "nooffer"}`,
+            offerId,
+            item: product.name ?? `Artikel ${product.id}`,
+            store: store.name,
+            originalPrice,
+            priceNow,
+            savings,
+            url:
+              resolvedUrl ??
+              getStoreCircularUrl(store.name, offerId ?? product.id),
+          });
         }
-        console.log(product);
-        const offerId = product.offerId;
-
-        const savings = originalPrice - priceNow;
-        if (savings <= 1) {
-          continue;
-        }
-
-        const resolvedUrl =
-          product.pipUrl?.startsWith("http") ?? false
-            ? product.pipUrl
-            : product.pipUrl
-            ? `https://www.ikea.com${product.pipUrl}`
-            : undefined;
-
-        candidates.push({
-          id: `${storeId}-${product.id}-${offerId ?? "nooffer"}`,
-          offerId,
-          item: product.name ?? `Artikel ${product.id}`,
-          store: store.name,
-          originalPrice,
-          priceNow,
-          savings,
-          url: resolvedUrl ?? getStoreCircularUrl(store.name, offerId ?? product.id),
-        });
+      } catch (error) {
+        console.error(
+          `[v0] Gids: kon aanbiedingen voor ${store.name} niet ophalen:`,
+          error
+        );
       }
-    } catch (error) {
-      console.error(
-        `[v0] Gids: kon aanbiedingen voor ${store.name} niet ophalen:`,
-        error
-      );
-    }
-  }
+    })
+  );
 
-return candidates
+  return candidates
     .sort((a, b) => b.savings - a.savings)
     .slice(0, 5);
 }
