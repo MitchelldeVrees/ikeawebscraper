@@ -28,7 +28,7 @@ export function SiteHeader({ className }: { className?: string }) {
       </div>
       <div className="flex flex-wrap gap-2 text-sm">
         <Button asChild variant="ghost" size="sm">
-          <Link href="/guide-to-ikea-tweede-kans">Gids</Link>
+          <Link href="/guide-to-ikea-tweede-kans">Guide</Link>
         </Button>
         <Button asChild variant="ghost" size="sm">
           <Link href="/ikea-tweede-kans-faq">FAQ</Link>

@@ -29,27 +29,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="grid md:grid-cols-3 gap-6 mb-12">
-          {[
-            [
-              "Directe waarschuwingen",
-              "We laten je meteen weten wanneer een artikel beschikbaar komt.",
-            ],
-            [
-              "Meerdere winkels",
-              "Monitor voorraad in IKEA filialen door heel Nederland.",
-            ],
-            [
-              "Brandstofinschatting",
-              "Vergelijk kosten om een slimme keuze te maken.",
-            ],
-          ].map(([title, detail]) => (
-            <div key={title} className="rounded-xl border border-border p-4 space-y-2">
-              <h3 className="text-lg font-semibold">{title}</h3>
-              <p className="text-sm text-muted-foreground">{detail}</p>
-            </div>
-          ))}
-        </section>
+       
 
         <section id="watch-alerts" className="max-w-4xl mx-auto mb-8">
           <WatchForm />

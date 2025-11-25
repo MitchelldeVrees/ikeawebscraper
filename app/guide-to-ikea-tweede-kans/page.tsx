@@ -79,7 +79,7 @@ async function getBestDeals(): Promise<BestDealRow[]> {
         }
       } catch (error) {
         console.error(
-          `[v0] Gids: kon aanbiedingen voor ${store.name} niet ophalen:`,
+          `Guide: kon aanbiedingen voor ${store.name} niet ophalen:`,
           error
         );
       }
