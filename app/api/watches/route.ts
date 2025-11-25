@@ -210,3 +210,143 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json().catch(() => null);
+    const { articleNumber, desiredQuantity } = body ?? {};
+
+    if (!articleNumber) {
+      return NextResponse.json(
+        { error: "Article number is required" },
+        { status: 400 }
+      );
+    }
+
+    const normalizedArticleNumber = String(articleNumber).replace(/\D/g, "");
+    if (normalizedArticleNumber.length !== 8) {
+      return NextResponse.json(
+        { error: "Article number must contain 8 digits" },
+        { status: 400 }
+      );
+    }
+
+    const normalizedDesiredQuantity = Math.max(
+      1,
+      Number.isFinite(Number(desiredQuantity))
+        ? Math.floor(Number(desiredQuantity))
+        : 1
+    );
+
+    const supabase = await createClient();
+    const authHeader = request.headers.get("authorization");
+    const token = authHeader?.startsWith("Bearer ")
+      ? authHeader.slice("Bearer ".length)
+      : undefined;
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser(token);
+
+    if (userError || !user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { error, count } = await supabase
+      .from("watches")
+      .update({ desired_quantity: normalizedDesiredQuantity })
+      .eq("email", user.email)
+      .eq("product_name", normalizedArticleNumber)
+      .eq("is_active", true)
+      .select("id", { count: "exact", head: true });
+
+    if (error) {
+      console.error("[v0] Error updating desired quantity:", error);
+      return NextResponse.json(
+        { error: "Failed to update desired quantity" },
+        { status: 500 }
+      );
+    }
+
+    if (!count) {
+      return NextResponse.json({ error: "Watch not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        desiredQuantity: normalizedDesiredQuantity,
+        updated: count,
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("[v0] Error in PATCH /api/watches:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const body = await request.json().catch(() => null);
+    const { articleNumber } = body ?? {};
+
+    if (!articleNumber) {
+      return NextResponse.json(
+        { error: "Article number is required" },
+        { status: 400 }
+      );
+    }
+
+    const normalizedArticleNumber = String(articleNumber).replace(/\D/g, "");
+    if (normalizedArticleNumber.length !== 8) {
+      return NextResponse.json(
+        { error: "Article number must contain 8 digits" },
+        { status: 400 }
+      );
+    }
+
+    const supabase = await createClient();
+    const authHeader = request.headers.get("authorization");
+    const token = authHeader?.startsWith("Bearer ")
+      ? authHeader.slice("Bearer ".length)
+      : undefined;
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser(token);
+
+    if (userError || !user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { error, count } = await supabase
+      .from("watches")
+      .delete({ count: "exact" })
+      .eq("email", user.email)
+      .eq("product_name", normalizedArticleNumber);
+
+    if (error) {
+      console.error("[v0] Error deleting watches:", error);
+      return NextResponse.json(
+        { error: "Failed to delete watches" },
+        { status: 500 }
+      );
+    }
+
+    if (!count) {
+      return NextResponse.json({ error: "Watch not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, deleted: count }, { status: 200 });
+  } catch (error) {
+    console.error("[v0] Error in DELETE /api/watches:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}

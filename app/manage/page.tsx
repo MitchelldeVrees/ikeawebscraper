@@ -11,7 +11,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Package, Loader2, Trash2, ArrowLeft, RefreshCcw, LogIn } from "lucide-react";
+import {
+  Package,
+  Loader2,
+  Trash2,
+  ArrowLeft,
+  RefreshCcw,
+  LogIn,
+  Pencil,
+} from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/components/providers/auth-provider";
 import type { ProductPreview } from "@/lib/ikea-api";
@@ -55,6 +63,10 @@ export default function ManagePage() {
   const [articlePreviews, setArticlePreviews] = useState<
     Record<string, ProductPreview | null>
   >({});
+  const [desiredEdits, setDesiredEdits] = useState<Record<string, number>>({});
+  const [savingDesired, setSavingDesired] = useState<Record<string, boolean>>({});
+  const [deletingArticle, setDeletingArticle] = useState<Record<string, boolean>>({});
+  const [editingArticle, setEditingArticle] = useState<string | null>(null);
   const isVerified = Boolean(user?.email_confirmed_at);
 
   const fetchWatches = async () => {
@@ -90,6 +102,93 @@ export default function ManagePage() {
     } finally {
       setIsLoading(false);
       setHasLoaded(true);
+    }
+  };
+
+  const handleSaveDesiredQuantity = async (articleNumber: string) => {
+    const nextValue = desiredEdits[articleNumber];
+    const desired = Number.isFinite(nextValue) ? Math.max(1, Math.floor(nextValue)) : null;
+
+    if (!desired) return;
+
+    setSavingDesired((prev) => ({ ...prev, [articleNumber]: true }));
+    setError(null);
+
+    try {
+      const response = await fetch("/api/watches", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.access_token
+            ? { Authorization: `Bearer ${session.access_token}` }
+            : {}),
+        },
+        body: JSON.stringify({
+          articleNumber,
+          desiredQuantity: desired,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to update desired quantity");
+      }
+
+      setWatches((prev) =>
+        prev.map((group) =>
+          group.article_number === articleNumber
+            ? { ...group, desired_quantity: desired }
+            : group
+        )
+      );
+      setDesiredEdits((prev) => ({ ...prev, [articleNumber]: desired }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update desired quantity");
+    } finally {
+      setSavingDesired((prev) => ({ ...prev, [articleNumber]: false }));
+    }
+  };
+
+  const handleDeleteArticle = async (articleNumber: string) => {
+    setDeletingArticle((prev) => ({ ...prev, [articleNumber]: true }));
+    setError(null);
+
+    try {
+      const response = await fetch("/api/watches", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.access_token
+            ? { Authorization: `Bearer ${session.access_token}` }
+            : {}),
+        },
+        body: JSON.stringify({ articleNumber }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to delete watch");
+      }
+
+      setWatches((prev) =>
+        prev.filter((group) => group.article_number !== articleNumber)
+      );
+      setWatchStatuses((prev) => {
+        const next = { ...prev };
+        delete next[articleNumber];
+        return next;
+      });
+      setDesiredEdits((prev) => {
+        const next = { ...prev };
+        delete next[articleNumber];
+        return next;
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete watch");
+    } finally {
+      setDeletingArticle((prev) => ({ ...prev, [articleNumber]: false }));
     }
   };
 
@@ -543,13 +642,70 @@ export default function ManagePage() {
                               Article {group.article_number}
                             </p>
                           </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setEditingArticle((prev) =>
+                                prev === group.article_number ? null : group.article_number
+                              );
+                              setDesiredEdits((prev) => ({
+                                ...prev,
+                                [group.article_number]:
+                                  prev[group.article_number] ??
+                                  group.desired_quantity ??
+                                  1,
+                              }));
+                            }}
+                            aria-label="Edit watch"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
                         </div>
                         <div className="mt-4 flex items-start justify-between gap-4">
                           <div className="flex-1">
                             <div className="space-y-1 text-sm text-muted-foreground">
                               <p>
-                                <span className="font-medium">Minimum quantity:</span>{" "}
-                                {group.desired_quantity ?? 1}
+                                <span className="font-medium">Desired quantity (max):</span>{" "}
+                                {editingArticle === group.article_number ? (
+                                  <>
+                                    <input
+                                      type="number"
+                                      min={1}
+                                      className="ml-2 w-24 rounded border border-border bg-background px-2 py-1"
+                                      value={
+                                        desiredEdits[group.article_number] ??
+                                        group.desired_quantity ??
+                                        1
+                                      }
+                                      onChange={(e) =>
+                                        setDesiredEdits((prev) => ({
+                                          ...prev,
+                                          [group.article_number]: Math.max(
+                                            1,
+                                            Number(e.target.value) || 1
+                                          ),
+                                        }))
+                                      }
+                                    />
+                                    <Button
+                                      size="sm"
+                                      className="ml-2"
+                                      onClick={() =>
+                                        handleSaveDesiredQuantity(group.article_number)
+                                      }
+                                      disabled={savingDesired[group.article_number]}
+                                    >
+                                      {savingDesired[group.article_number]
+                                        ? "Saving..."
+                                        : "Save"}
+                                    </Button>
+                                  </>
+                                ) : (
+                                  <span className="ml-1">
+                                    {group.desired_quantity ?? 1}
+                                  </span>
+                                )}
                               </p>
                               <p>
                                 <span className="font-medium">Created:</span>{" "}
@@ -579,20 +735,35 @@ export default function ManagePage() {
                                   })}
                                 </p>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  variant="destructive"
-                                  size="icon"
-                                  onClick={() =>
-                                    handleDelete(store.id, group.article_number)
-                                  }
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
+                              {editingArticle === group.article_number && (
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    variant="destructive"
+                                    size="icon"
+                                    onClick={() =>
+                                      handleDelete(store.id, group.article_number)
+                                    }
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>
+                        {editingArticle === group.article_number && (
+                          <div className="mt-4 flex justify-end">
+                            <Button
+                              variant="destructive"
+                              onClick={() => handleDeleteArticle(group.article_number)}
+                              disabled={deletingArticle[group.article_number]}
+                            >
+                              {deletingArticle[group.article_number]
+                                ? "Deleting..."
+                                : "Delete this product"}
+                            </Button>
+                          </div>
+                        )}
                         {watchStatuses[group.article_number]?.message && (
                           <Alert
                             variant={

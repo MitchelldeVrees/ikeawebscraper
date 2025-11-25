@@ -150,19 +150,19 @@ export async function GET(request: NextRequest) {
         const seenProductIds = new Set<string>();
 
         for (const watch of groupWatches) {
-          const {
-            matches,
-            unsentMatches,
-            requiredQuantity,
-          } = await computeWatchMatches(supabase, watch, { products });
+          const { matches, unsentMatches, desiredCount } =
+            await computeWatchMatches(supabase, watch, { products });
 
-          const requirementMet = matches.length >= requiredQuantity;
-          totalMatches += matches.length;
+          const cappedMatches = matches.slice(0, desiredCount);
+          const cappedUnsentMatches = unsentMatches.slice(0, desiredCount);
+
+          const requirementMet = cappedMatches.length > 0;
+          totalMatches += cappedMatches.length;
 
           let notificationsPlanned = 0;
 
-          if (unsentMatches.length >= requiredQuantity) {
-            const toNotify = unsentMatches.slice(0, requiredQuantity);
+          if (cappedUnsentMatches.length > 0) {
+            const toNotify = cappedUnsentMatches;
 
             for (const product of toNotify) {
               if (!seenProductIds.has(product.id)) {
@@ -192,7 +192,7 @@ export async function GET(request: NextRequest) {
             email,
             storeId,
             storeName,
-            availableMatches: matches.length,
+            availableMatches: cappedMatches.length,
             notificationsPlanned,
             requirementMet,
           });

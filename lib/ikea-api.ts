@@ -180,6 +180,7 @@ async function fetchProductJson(
   if (urls.length === 0) {
     return null;
   }
+  console.log(urls);
 
   const headers = buildIkeaHeaders(userAgent);
 
@@ -238,7 +239,7 @@ export async function fetchProductPreview(
     return null;
   }
 
-  const contextualImage = product?.experimental?.contextualImage;
+  const contextualImage = product?.mainImage?.url;
   const mainImage = product?.mainImage;
   const fallbackImage =
     contextualImage?.url ??

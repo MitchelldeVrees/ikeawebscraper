@@ -31,7 +31,7 @@ export interface CheckWatchResult {
   matches: IkeaProduct[];
   notificationsSent: number;
   productsChecked: number;
-  requiredQuantity: number;
+  desiredCount: number;
   requirementMet: boolean;
   availableMatches: number;
   newMatchesAvailable: number;
@@ -41,7 +41,7 @@ export interface WatchMatchComputation {
   products: IkeaProduct[];
   matches: IkeaProduct[];
   unsentMatches: IkeaProduct[];
-  requiredQuantity: number;
+  desiredCount: number;
 }
 
 export interface FuelInfo {
@@ -116,7 +116,7 @@ export async function computeWatchMatches(
   watch: WatchRecord,
   options?: ComputeWatchMatchesOptions
 ): Promise<WatchMatchComputation> {
-  const requiredQuantity =
+  const desiredCount =
     watch.desired_quantity && watch.desired_quantity > 0
       ? watch.desired_quantity
       : 1;
@@ -164,7 +164,7 @@ export async function computeWatchMatches(
     products,
     matches,
     unsentMatches,
-    requiredQuantity,
+    desiredCount,
   };
 }
 
@@ -210,19 +210,22 @@ export async function checkStoreWatches(
   const skipNotificationCheck = options?.skipNotificationCheck ?? false;
 
   for (const watch of watches) {
-    const { matches, unsentMatches, requiredQuantity } =
+    const { matches, unsentMatches, desiredCount } =
       await computeWatchMatches(supabase, watch, {
         products,
         skipNotificationCheck,
       });
 
-    totalMatches += matches.length;
-    if (matches.length >= requiredQuantity) {
+    const cappedMatches = matches.slice(0, desiredCount);
+    const cappedUnsentMatches = unsentMatches.slice(0, desiredCount);
+
+    totalMatches += cappedMatches.length;
+    if (cappedMatches.length > 0) {
       requirementMet = true;
     }
 
-    if (unsentMatches.length >= requiredQuantity) {
-      const toNotify = unsentMatches.slice(0, requiredQuantity);
+    if (cappedUnsentMatches.length > 0) {
+      const toNotify = cappedUnsentMatches;
 
       for (const product of toNotify) {
         if (!seenProductIds.has(product.id)) {

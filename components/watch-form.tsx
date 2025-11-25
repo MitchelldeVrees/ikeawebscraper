@@ -471,7 +471,7 @@ export function WatchForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="quantity">Minimum Availability</Label>
+                <Label htmlFor="quantity">Desired Quantity (max)</Label>
                 <Input
                   id="quantity"
                   type="number"
@@ -482,7 +482,7 @@ export function WatchForm() {
                   }
                 />
                 <p className="text-xs text-muted-foreground">
-                  Alert me when at least this many matching products are available.
+                  Alert me when up to this many matching products are available in a single store. Alerts trigger even if fewer are found.
                 </p>
               </div>
 
