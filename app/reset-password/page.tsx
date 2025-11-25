@@ -26,7 +26,7 @@ export default function ResetPasswordPage() {
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
       if (!data.session) {
-        setError("Password reset link is invalid or has expired.");
+        setError("Deze resetlink is ongeldig of verlopen.");
       } else {
         setSessionReady(true);
       }
@@ -43,12 +43,12 @@ export default function ResetPasswordPage() {
     setStatus(null);
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
+      setError("Wachtwoord moet minstens 6 tekens bevatten.");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError("Wachtwoorden komen niet overeen.");
       return;
     }
 
@@ -63,10 +63,10 @@ export default function ResetPasswordPage() {
         throw updateError;
       }
 
-      setStatus("Password updated! You can now sign in with your new password.");
+      setStatus("Wachtwoord bijgewerkt! Je kunt nu inloggen met je nieuwe wachtwoord.");
       setTimeout(() => router.replace("/login"), 3000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update password");
+      setError(err instanceof Error ? err.message : "Kon het wachtwoord niet bijwerken.");
     } finally {
       setIsSubmitting(false);
     }
@@ -79,20 +79,20 @@ export default function ResetPasswordPage() {
           <CardHeader className="flex flex-row items-center gap-3">
             <Lock className="h-8 w-8 text-blue-600" />
             <div>
-              <CardTitle>Reset Password</CardTitle>
+              <CardTitle>Wachtwoord resetten</CardTitle>
               <CardDescription>
-                Enter a new password for your IKEA Tweedekansje Alerts account.
+                Voer een nieuw wachtwoord in voor je IKEA Tweedekansje Alerts account.
               </CardDescription>
             </div>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleReset} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="password">New Password</Label>
+                <Label htmlFor="password">Nieuw wachtwoord</Label>
                 <Input
                   id="password"
                   type="password"
-                  placeholder="********"
+                placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -101,11 +101,11 @@ export default function ResetPasswordPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirm">Confirm Password</Label>
+                <Label htmlFor="confirm">Bevestig wachtwoord</Label>
                 <Input
                   id="confirm"
                   type="password"
-                  placeholder="********"
+                placeholder="••••••••"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
@@ -130,10 +130,10 @@ export default function ResetPasswordPage() {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Updating password...
+                    Wachtwoord wordt bijgewerkt...
                   </>
                 ) : (
-                  "Update Password"
+                  "Wachtwoord bijwerken"
                 )}
               </Button>
             </form>
@@ -143,4 +143,3 @@ export default function ResetPasswordPage() {
     </main>
   );
 }
-

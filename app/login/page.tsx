@@ -47,7 +47,7 @@ export default function LoginPage() {
           throw signInError;
         }
 
-        setStatus("Successfully signed in!");
+        setStatus("Succesvol ingelogd!");
         router.replace("/manage");
       } else {
         const origin =
@@ -67,11 +67,11 @@ export default function LoginPage() {
         }
 
         setStatus(
-          "Account created! Please check your inbox to verify your email before signing in."
+          "Account aangemaakt! Bekijk je inbox om je e-mailadres te verifiëren."
         );
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Authentication failed");
+      setError(err instanceof Error ? err.message : "Authenticatie mislukt.");
     } finally {
       setIsSubmitting(false);
     }
@@ -79,7 +79,7 @@ export default function LoginPage() {
 
   const handlePasswordReset = async () => {
     if (!email) {
-      setError("Enter your email address first.");
+      setError("Voer eerst je e-mailadres in.");
       return;
     }
 
@@ -102,9 +102,9 @@ export default function LoginPage() {
         throw resetError;
       }
 
-      setStatus("Password reset email sent. Check your inbox for further steps.");
+      setStatus("Reset e-mail verstuurd. Controleer je inbox.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send reset email");
+      setError(err instanceof Error ? err.message : "Kon reset e-mail niet versturen.");
     } finally {
       setIsResetting(false);
     }
@@ -122,11 +122,11 @@ export default function LoginPage() {
                 <MailCheck className="h-8 w-8 text-blue-600" />
               )}
               <div>
-                <CardTitle>{mode === "login" ? "Sign In" : "Create an Account"}</CardTitle>
+                <CardTitle>{mode === "login" ? "Inloggen" : "Maak een account"}</CardTitle>
                 <CardDescription>
                   {mode === "login"
-                    ? "Access your IKEA Tweedekansje alerts dashboard."
-                    : "Create an account to watch IKEA article numbers and get notified."}
+                    ? "Log in om je IKEA Tweedekansje dashboard te openen."
+                    : "Maak een account om IKEA artikel nummers te volgen en notificaties te ontvangen."}
                 </CardDescription>
               </div>
             </div>
@@ -134,11 +134,11 @@ export default function LoginPage() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">E-mail</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder="je@voorbeeld.nl"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -146,7 +146,7 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">Wachtwoord</Label>
                 <Input
                   id="password"
                   type="password"
@@ -174,12 +174,12 @@ export default function LoginPage() {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {mode === "login" ? "Signing In..." : "Creating Account..."}
+                    {mode === "login" ? "Bezig met inloggen..." : "Account wordt aangemaakt..."}
                   </>
                 ) : mode === "login" ? (
-                  "Sign In"
+                  "Inloggen"
                 ) : (
-                  "Create Account"
+                  "Account aanmaken"
                 )}
               </Button>
             </form>
@@ -195,16 +195,16 @@ export default function LoginPage() {
                 {isResetting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Sending reset email...
+                    Reset e-mail wordt verstuurd...
                   </>
                 ) : (
-                  "Forgot password?"
+                  "Wachtwoord vergeten?"
                 )}
               </Button>
 
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">
-                  {mode === "login" ? "Need an account?" : "Already have an account?"}
+                  {mode === "login" ? "Nog geen account?" : "Heb je al een account?"}
                 </span>
                 <Button
                   type="button"
@@ -215,12 +215,12 @@ export default function LoginPage() {
                     setStatus(null);
                   }}
                 >
-                  {mode === "login" ? "Create one" : "Sign in"}
+                  {mode === "login" ? "Maak er één aan" : "Log in"}
                 </Button>
               </div>
 
               <Button asChild variant="outline">
-                <Link href="/">Back to home</Link>
+                <Link href="/">Terug naar start</Link>
               </Button>
             </div>
           </CardContent>
@@ -229,4 +229,3 @@ export default function LoginPage() {
     </main>
   );
 }
-

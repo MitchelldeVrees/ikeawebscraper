@@ -12,26 +12,51 @@ const _geist = V0_Font_Geist({ subsets: ['latin'], weight: ["100","200","300","4
 const _geistMono = V0_Font_Geist_Mono({ subsets: ['latin'], weight: ["100","200","300","400","500","600","700","800","900"] })
 const _sourceSerif_4 = V0_Font_Source_Serif_4({ subsets: ['latin'], weight: ["200","300","400","500","600","700","800","900"] })
 
+const baseUrl = 'https://ikeatweedekans.com/';
+
 export const metadata: Metadata = {
-  title: 'IKEA Tweedekansje Alerts',
-  description: 'Get email alerts when your favorite IKEA products appear on Tweedekansje with huge discounts',
+  metadataBase: new URL(baseUrl),
+  title: {
+    default: 'IKEA Tweede Kans Alerts',
+    template: '%s | IKEA Tweede Kans Alerts',
+  },
+  description:
+    'Track your favorite IKEA Tweedekansje (tweede kans) products and get notified instantly when they are available across stores in the Netherlands.',
   generator: 'v0.app',
+  keywords: [
+    'ikea tweedekans',
+    'ikea tweede kans',
+    'ikea tweedekansje alerts',
+    'ikea clearance deals',
+    'ikea sale alerts',
+  ],
+  authors: [
+    {
+      name: 'IKEA Tweedekansje Alerts',
+      url: baseUrl,
+    },
+  ],
+  openGraph: {
+    title: 'IKEA Tweedekansje Alerts',
+    description:
+      'Track your favorite IKEA Tweedekansje (tweede kans) products and get notified instantly when they restock in the Netherlands.',
+    url: baseUrl,
+    siteName: 'IKEA Tweedekansje Alerts',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'IKEA Tweedekansje Alerts',
+    description:
+      'Track your favorite IKEA Tweedekansje (tweede kans) products and get notified instantly.',
+    site: '@IkeaTweedeKans',
+  },
   icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
+    icon: '/ikeaTweedeKans.png',
+    apple: '/ikeaTweedeKans.png',
+  },
+  other: {
+    'robots': 'index,follow',
   },
 }
 
