@@ -668,7 +668,7 @@ export default function ManagePage() {
                           <div className="flex-1">
                             <div className="space-y-1 text-sm text-muted-foreground">
                               <p>
-                                <span className="font-medium">Minimale hoeveelheid:</span>{" "}
+                                <span className="font-medium">Hoeveelheid nodig:</span>{" "}
                                 {group.desired_quantity ?? 1}
                               </p>
                               <p>

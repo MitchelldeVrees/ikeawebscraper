@@ -471,7 +471,7 @@ export function WatchForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="quantity">Minimale beschikbaarheid</Label>
+                <Label htmlFor="quantity">Hoeveelheid nodig</Label>
                 <Input
                   id="quantity"
                   type="number"
