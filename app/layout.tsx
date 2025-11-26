@@ -32,23 +32,23 @@ export const metadata: Metadata = {
   ],
   authors: [
     {
-      name: 'IKEA Tweedekansje Alerts',
+      name: 'IKEA Tweede kans',
       url: baseUrl,
     },
   ],
   openGraph: {
-    title: 'IKEA Tweedekansje Alerts',
+    title: 'IKEA Tweede kans',
     description:
       'Track your favorite IKEA Tweedekansje (tweede kans) products and get notified instantly when they restock in the Netherlands.',
     url: baseUrl,
-    siteName: 'IKEA Tweedekansje Alerts',
+    siteName: 'IKEA Tweede kans',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'IKEA Tweedekansje Alerts',
+    title: 'IKEA Tweede kans',
     description:
-      'Track your favorite IKEA Tweedekansje (tweede kans) products and get notified instantly.',
+      'Track your favorite IKEA Tweede kans products and get notified instantly.',
     site: '@IkeaTweedeKans',
   },
   icons: {
