@@ -29,19 +29,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const secret = process.env.CRON_SECRET;
-    if (secret) {
-      const url = new URL(request.url);
-      const provided =
-        url.searchParams.get("secret") ||
-        request.headers.get("x-cron-secret") ||
-        undefined;
-
-      if (provided !== secret) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
-    }
-
     const supabase = await createClient();
 
     const { data: watches, error: watchesError } = await supabase

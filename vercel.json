@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/check-watches",
-      "schedule": "52 14 * * *"
+      "schedule": "0 16 * * *"
     }
   ]
 }
