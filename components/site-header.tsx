@@ -19,7 +19,7 @@ export function SiteHeader({ className }: { className?: string }) {
         <Package className="h-8 w-8 text-primary" />
         <div>
           <h1 className="text-xl md:text-2xl font-semibold">
-            IKEA Tweedekansje Alerts
+            IKEA Tweede kans
           </h1>
           <p className="text-xs uppercase tracking-wide text-muted-foreground">
             Tweede kans tracker

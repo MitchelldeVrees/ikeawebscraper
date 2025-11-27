@@ -26,7 +26,6 @@ export const metadata: Metadata = {
   keywords: [
     'ikea tweedekans',
     'ikea tweede kans',
-    'ikea tweedekansje alerts',
     'ikea clearance deals',
     'ikea sale alerts',
   ],
