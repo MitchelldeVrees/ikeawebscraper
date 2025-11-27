@@ -1,17 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import {
-  computeWatchMatches,
-  computeFuelInfo,
+  checkStoreWatches,
   type WatchRecord,
   type ProfileInfo,
 } from "@/lib/watch-check";
-import { IKEA_STORES, type IkeaStoreId } from "@/lib/ikea-stores";
-import { sendStoreSummaryAlert } from "@/lib/email";
-import { fetchIkeaDeals } from "@/lib/ikea-api";
+import { fetchIkeaDeals, type IkeaProduct } from "@/lib/ikea-api";
 
 export const dynamic = "force-dynamic";
-const CRON_TEMP_DISABLED = true;
+const CRON_TEMP_DISABLED = process.env.CRON_TEMP_DISABLED === "true";
+
+type CronStoreResult = {
+  email: string;
+  storeId: string;
+  storeName: string;
+  watches: number;
+  availableMatches: number;
+  newMatchesAvailable: number;
+  notificationsSent: number;
+};
 
 export async function GET(request: NextRequest) {
   try {
@@ -52,7 +59,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const activeWatches = (watches ?? []) as WatchRecord[];
+    const activeWatches = ((watches ?? []) as WatchRecord[]).filter(
+      (watch) => Boolean(watch.email)
+    );
 
     if (activeWatches.length === 0) {
       return NextResponse.json(
@@ -62,7 +71,11 @@ export async function GET(request: NextRequest) {
     }
 
     const uniqueEmails = Array.from(
-      new Set(activeWatches.map((w) => w.email).filter(Boolean))
+      new Set(
+        activeWatches
+          .map((w) => w.email)
+          .filter((email): email is string => Boolean(email))
+      )
     );
 
     const profilesByEmail: Record<string, ProfileInfo> = {};
@@ -70,9 +83,7 @@ export async function GET(request: NextRequest) {
     if (uniqueEmails.length > 0) {
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select(
-          "email, address_lat, address_lng, gas_usage, fuel_price"
-        )
+        .select("email, address_lat, address_lng, gas_usage, fuel_price")
         .in("email", uniqueEmails);
 
       if (profilesError) {
@@ -86,8 +97,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Group watches by (email, store_id) so we can send
-    // one aggregated email per store per user.
     const watchesByEmailAndStore = new Map<string, WatchRecord[]>();
 
     for (const watch of activeWatches) {
@@ -100,139 +109,45 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    const storeProductCache = new Map<string, IkeaProduct[]>();
+    const cronResults: CronStoreResult[] = [];
     let totalNotificationsSent = 0;
     let totalMatches = 0;
 
-    const perWatchResults: Array<{
-      watchId: string;
-      email: string;
-      storeId: string;
-      storeName: string;
-      availableMatches: number;
-      notificationsPlanned: number;
-      requirementMet: boolean;
-    }> = [];
-
-    const productsByStoreId: Record<string, any[]> = {};
-
     for (const [key, groupWatches] of watchesByEmailAndStore.entries()) {
       const example = groupWatches[0];
-      const email = example.email;
-      const storeId = example.store_id;
-      const storeName = example.store_name;
-      const profile =
-        (email ? profilesByEmail[email] : undefined) ?? undefined;
-      const storeMeta = IKEA_STORES[storeId as IkeaStoreId];
+      const email = example?.email;
+
+      if (!email) {
+        continue;
+      }
 
       try {
-        let products = productsByStoreId[storeId];
+        let products = storeProductCache.get(example.store_id);
         if (!products) {
-          // Fetch once per store for this cron run.
-          products = await fetchIkeaDeals(storeId);
-          productsByStoreId[storeId] = products;
+          products = await fetchIkeaDeals(example.store_id);
+          storeProductCache.set(example.store_id, products);
         }
 
-        const plannedNotifications: Array<{
-          watch_id: string;
-          product_name: string;
-          product_price: number;
-          product_image?: string;
-          ikea_product_id: string;
-        }> = [];
-
-        const aggregatedProducts: Array<{
-          name: string;
-          price: number;
-          originalPrice?: number;
-          imageUrl?: string;
-        }> = [];
-
-        const seenProductIds = new Set<string>();
-
-        for (const watch of groupWatches) {
-          const { matches, unsentMatches, desiredCount } =
-            await computeWatchMatches(supabase, watch, { products });
-
-          const cappedMatches = matches.slice(0, desiredCount);
-          const cappedUnsentMatches = unsentMatches.slice(0, desiredCount);
-
-          const requirementMet = cappedMatches.length > 0;
-          totalMatches += cappedMatches.length;
-
-          let notificationsPlanned = 0;
-
-          if (cappedUnsentMatches.length > 0) {
-            const toNotify = cappedUnsentMatches;
-
-            for (const product of toNotify) {
-              if (!seenProductIds.has(product.id)) {
-                aggregatedProducts.push({
-                  name: product.name,
-                  price: product.price,
-                  originalPrice: product.originalPrice,
-                  imageUrl: product.imageUrl,
-                });
-                seenProductIds.add(product.id);
-              }
-
-              plannedNotifications.push({
-                watch_id: watch.id,
-                product_name: product.name,
-                product_price: product.price,
-                product_image: product.imageUrl,
-                ikea_product_id: product.id,
-              });
-
-              notificationsPlanned += 1;
-            }
-          }
-
-          perWatchResults.push({
-            watchId: watch.id,
-            email,
-            storeId,
-            storeName,
-            availableMatches: cappedMatches.length,
-            notificationsPlanned,
-            requirementMet,
-          });
-        }
-
-        if (aggregatedProducts.length === 0 || !email) {
-          continue;
-        }
-
-        const fuelInfo = await computeFuelInfo(
-          profile ?? null,
-          storeMeta?.lat,
-          storeMeta?.lng
+        const result = await checkStoreWatches(
+          supabase,
+          groupWatches,
+          profilesByEmail[email] ?? undefined,
+          { products }
         );
 
-        const emailSent = await sendStoreSummaryAlert({
-          to: email,
-          storeName,
-          storeAddress: storeMeta?.address,
-          distanceKm: fuelInfo?.distanceKm,
-          fuelCost: fuelInfo?.fuelCost,
-          fuelPricePerLiter: fuelInfo?.fuelPricePerLiter,
-          fuelUsage: fuelInfo?.fuelUsage,
-          products: aggregatedProducts,
+        totalMatches += result.availableMatches;
+        totalNotificationsSent += result.notificationsSent;
+
+        cronResults.push({
+          email,
+          storeId: result.storeId,
+          storeName: result.storeName,
+          watches: groupWatches.length,
+          availableMatches: result.availableMatches,
+          newMatchesAvailable: result.newMatchesAvailable,
+          notificationsSent: result.notificationsSent,
         });
-
-        if (emailSent && plannedNotifications.length > 0) {
-          const { error: insertError } = await supabase
-            .from("notifications")
-            .insert(plannedNotifications);
-
-          if (insertError) {
-            console.error(
-              "[v0] Cron: failed to insert notifications:",
-              insertError
-            );
-          } else {
-            totalNotificationsSent += plannedNotifications.length;
-          }
-        }
       } catch (error) {
         console.error(
           `[v0] Cron: error checking watches for key ${key}:`,
@@ -247,7 +162,8 @@ export async function GET(request: NextRequest) {
         totalActiveWatches: activeWatches.length,
         totalMatches,
         totalNotificationsSent,
-        results: perWatchResults,
+        processedGroups: cronResults.length,
+        results: cronResults,
       },
       { status: 200 }
     );

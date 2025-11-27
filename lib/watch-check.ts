@@ -170,6 +170,7 @@ export async function computeWatchMatches(
 
 type CheckStoreWatchesOptions = {
   skipNotificationCheck?: boolean;
+  products?: IkeaProduct[];
 };
 
 export async function checkStoreWatches(
@@ -195,7 +196,7 @@ export async function checkStoreWatches(
   const storeName = watches[0].store_name;
   const storeMeta = IKEA_STORES[storeId as IkeaStoreId];
 
-  const products = await fetchIkeaDeals(storeId);
+  const products = options?.products ?? (await fetchIkeaDeals(storeId));
   const plannedNotifications: Array<{
     watch_id: string;
     product_name: string;
