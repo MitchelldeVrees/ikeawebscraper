@@ -29,8 +29,6 @@ export default function Home() {
           </div>
         </section>
 
-       
-
         <section id="watch-alerts" className="max-w-4xl mx-auto mb-8">
           <WatchForm />
         </section>
@@ -56,6 +54,22 @@ export default function Home() {
                 <Link href="/ikea-tweede-kans-faq">Lees de FAQ</Link>
               </Button>
             </article>
+          </div>
+        </section>
+
+        <section className="mt-12 rounded-2xl border border-dashed border-border bg-muted/20 p-6 text-left">
+          <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-2">
+            Analyse instellingen
+          </p>
+          <h3 className="text-lg font-semibold mb-3">
+            Optie 1: Installeer een tracking-ID via uw hostingservice of commerceplatform
+          </h3>
+          <p className="text-sm text-muted-foreground mb-3">
+            Log in bij uw websitebouwer, webhostingservice of commerceplatform en plak uw tracking-ID in het gedeelte met analytische gegevens.
+          </p>
+          <div className="inline-flex items-center gap-2 rounded-lg bg-background px-4 py-2 font-mono text-sm">
+            <span className="text-muted-foreground">Tracking-ID</span>
+            <strong className="text-base text-foreground">G-0HPH3HV4PL</strong>
           </div>
         </section>
 

@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   },
   description:
     'Track your favorite IKEA Tweedekansje (tweede kans) products and get notified instantly when they are available across stores in the Netherlands.',
-  generator: 'v0.app',
+  generator: '',
   keywords: [
     'ikea tweedekans',
     'ikea tweede kans',
