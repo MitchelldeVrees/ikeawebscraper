@@ -33,6 +33,9 @@ export function SiteHeader({ className }: { className?: string }) {
         <Button asChild variant="ghost" size="sm">
           <Link href="/ikea-tweede-kans-faq">FAQ</Link>
         </Button>
+        <Button asChild variant="ghost" size="sm">
+          <Link href="/contact">Contact</Link>
+        </Button>
         <Button asChild variant="outline" size="sm">
           <Link href="/manage">Watches beheren</Link>
         </Button>

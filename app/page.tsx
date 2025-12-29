@@ -22,7 +22,9 @@ export default function Home() {
             de beste deals.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
-
+            <Button asChild>
+              <Link href="/contact">Contact opnemen</Link>
+            </Button>
             <Button asChild variant="outline">
               <Link href="/guide-to-ikea-tweede-kans">Lees de guide</Link>
             </Button>
@@ -54,6 +56,16 @@ export default function Home() {
                 <Link href="/ikea-tweede-kans-faq">Lees de FAQ</Link>
               </Button>
             </article>
+            <article className="rounded-xl border border-border p-4 space-y-2">
+              <h4 className="text-base font-semibold">Contact en ondersteuning</h4>
+              <p className="text-sm text-muted-foreground">
+                Heb je feedback, een idee of een probleem met je account? Laat het
+                ons weten via het contactformulier.
+              </p>
+              <Button asChild size="sm" variant="ghost">
+                <Link href="/contact">Naar contact</Link>
+              </Button>
+            </article>
           </div>
         </section>
 
@@ -62,6 +74,14 @@ export default function Home() {
             Dit is een onafhankelijk hulpmiddel en is niet verbonden aan IKEA.
             De gegevens komen uit de publieke Tweedekansje API van IKEA.
           </p>
+          <div className="mt-3">
+            <Link
+              href="/contact"
+              className="text-primary underline-offset-4 hover:underline"
+            >
+              Contact opnemen
+            </Link>
+          </div>
         </footer>
       </div>
     </main>
