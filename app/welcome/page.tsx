@@ -50,8 +50,8 @@ export default function WelcomePage() {
               <p className="font-medium">Aan de slag in 3 stappen</p>
               <ol className="mt-2 list-decimal space-y-1 pl-4 text-muted-foreground">
                 <li>Ga naar je dashboard en voeg een eerste alert toe.</li>
-                <li>Controleer je contactgegevens in je account.</li>
-                <li>Ontvang direct een seintje zodra een deal live gaat.</li>
+                <li>Controleer je accountgegevens zodat we ook de benzineprijs kunnen berekenen(Als je met de auto gaat).</li>
+                <li>Ontvang direct een seintje zodra een deal op de IKEA website staat.</li>
               </ol>
             </div>
 
