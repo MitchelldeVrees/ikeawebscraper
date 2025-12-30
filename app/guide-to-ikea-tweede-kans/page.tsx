@@ -14,6 +14,7 @@ export const metadata = {
 type BestDealRow = {
   id: string;
   offerId?: number;
+  offerNumber?: string;
   item: string;
   store: string;
   originalPrice: number;
@@ -31,6 +32,7 @@ async function getBestDeals(): Promise<BestDealRow[]> {
     storesToScan.map(async ([storeId, store]) => {
       try {
         const products = await fetchIkeaDeals(storeId);
+  
 
         for (const product of products) {
           const priceNow =
@@ -56,7 +58,8 @@ async function getBestDeals(): Promise<BestDealRow[]> {
             continue;
           }
 
-          const offerId = product.offerId ?? product.offers?.[0]?.id;
+          const offerId = product.offerId;
+          const offerNumber = product.offerNumber;
           const resolvedUrl =
             product.pipUrl?.startsWith("http") ?? false
               ? product.pipUrl
@@ -67,6 +70,7 @@ async function getBestDeals(): Promise<BestDealRow[]> {
           candidates.push({
             id: `${storeId}-${product.id}-${offerId ?? "nooffer"}`,
             offerId,
+            offerNumber,
             item: product.name ?? `Artikel ${product.id}`,
             store: store.name,
             originalPrice,
@@ -74,7 +78,7 @@ async function getBestDeals(): Promise<BestDealRow[]> {
             savings,
             url:
               resolvedUrl ??
-              getStoreCircularUrl(store.name, offerId ?? product.id),
+              getStoreCircularUrl(store.name, offerNumber ?? product.id),
           });
         }
       } catch (error) {
@@ -99,7 +103,7 @@ function getStoreCircularUrl(storeName: string, productId: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
-  return `https://www.ikea.com/nl/nl/circular/second-hand/#/${slug}/${productId}`;
+  return `https://www.ikea.com/nl/nl/campaigns/tweedekanshoek-online-pubebfe3f30/#/${slug}/${productId}`;
 }
 
 function formatCurrency(value: number) {

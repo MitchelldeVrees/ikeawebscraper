@@ -58,7 +58,10 @@ export default function LoginPage() {
           email,
           password,
           options: {
-            emailRedirectTo: `${origin}/login`,
+            data: {
+              onboarded: false,
+            },
+            emailRedirectTo: `${origin}/auth/callback?next=/welcome`,
           },
         });
 
