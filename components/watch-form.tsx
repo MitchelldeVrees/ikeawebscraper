@@ -49,6 +49,15 @@ export function WatchForm() {
     return () => mediaQuery.removeEventListener("change", applyMatch);
   }, []);
 
+  useEffect(() => {
+    if (!isArtikelnummerInfoOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isArtikelnummerInfoOpen]);
+
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [csvError, setCsvError] = useState<string | null>(null);
   const [csvStatus, setCsvStatus] = useState<string | null>(null);
@@ -469,7 +478,7 @@ export function WatchForm() {
                   onClick={() => setIsArtikelnummerInfoOpen(false)}
                 >
                   <div
-                    className="max-w-3xl w-full"
+                    className="max-w-3xl w-full max-h-[85vh]"
                     onClick={(event) => event.stopPropagation()}
                   >
                     <div className="rounded-lg bg-background p-4 shadow-lg">
@@ -485,7 +494,7 @@ export function WatchForm() {
                           Sluiten
                         </button>
                       </div>
-                      <div className="relative w-full">
+                      <div className="relative w-full max-h-[70vh] overflow-auto">
                         <Image
                           src={
                             isMobileDevice
@@ -495,7 +504,7 @@ export function WatchForm() {
                           alt="Voorbeeld van een IKEA artikelnummer op de productpagina"
                           width={1200}
                           height={800}
-                          className="w-full h-auto rounded border"
+                          className="w-full h-auto rounded border object-contain"
                         />
                       </div>
                     </div>
