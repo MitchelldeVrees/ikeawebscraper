@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { WatchForm } from "@/components/watch-form";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -7,7 +8,9 @@ import { AuthCodeRedirect } from "@/components/auth-code-redirect";
 export default function Home() {
   return (
     <main className="min-h-screen bg-background text-foreground transition-colors">
-      <AuthCodeRedirect />
+      <Suspense fallback={null}>
+        <AuthCodeRedirect />
+      </Suspense>
       <div className="container mx-auto px-4 py-8">
         <SiteHeader />
 
