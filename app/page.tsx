@@ -5,7 +5,9 @@ import { SiteHeader } from "@/components/site-header";
 
 export default function Home() {
   return (
+    
     <main className="min-h-screen bg-background text-foreground transition-colors">
+      <script src="https://t.contentsquare.net/uxa/a5475e7745a1f.js"></script>
       <div className="container mx-auto px-4 py-8">
         <SiteHeader />
 
