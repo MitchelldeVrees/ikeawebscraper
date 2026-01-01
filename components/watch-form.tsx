@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle2, Loader2, Upload, LogIn } from "lucide-react";
+import { CheckCircle2, Loader2, Upload, LogIn, Info } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/components/providers/auth-provider";
 import { IKEA_STORES } from "@/lib/ikea-stores";
@@ -38,6 +38,25 @@ export function WatchForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isArtikelnummerInfoOpen, setIsArtikelnummerInfoOpen] = useState(false);
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 768px)");
+    const applyMatch = () => setIsMobileDevice(mediaQuery.matches);
+    applyMatch();
+    mediaQuery.addEventListener("change", applyMatch);
+    return () => mediaQuery.removeEventListener("change", applyMatch);
+  }, []);
+
+  useEffect(() => {
+    if (!isArtikelnummerInfoOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isArtikelnummerInfoOpen]);
 
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [csvError, setCsvError] = useState<string | null>(null);
@@ -382,7 +401,17 @@ export function WatchForm() {
           <TabsContent value="manual">
             <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="article">Artikelnummer</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="article">Artikelnummer</Label>
+                <button
+                  type="button"
+                  aria-label="Waar vind ik het artikelnummer?"
+                  className="inline-flex items-center justify-center rounded-full text-muted-foreground transition hover:text-foreground"
+                  onClick={() => setIsArtikelnummerInfoOpen(true)}
+                >
+                  <Info className="h-4 w-4" />
+                </button>
+              </div>
                 <Input
                   id="article"
                   type="text"
@@ -442,6 +471,46 @@ export function WatchForm() {
                   </div>
                 )}
               </div>
+
+              {isArtikelnummerInfoOpen && (
+                <div
+                  className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+                  onClick={() => setIsArtikelnummerInfoOpen(false)}
+                >
+                  <div
+                    className="max-w-3xl w-full max-h-[85vh]"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <div className="rounded-lg bg-background p-4 shadow-lg">
+                      <div className="flex items-center justify-between gap-4 mb-3">
+                        <p className="text-sm font-medium">
+                          Waar vind ik het IKEA artikelnummer?
+                        </p>
+                        <button
+                          type="button"
+                          className="text-muted-foreground hover:text-foreground"
+                          onClick={() => setIsArtikelnummerInfoOpen(false)}
+                        >
+                          Sluiten
+                        </button>
+                      </div>
+                      <div className="relative w-full max-h-[70vh] overflow-auto">
+                        <Image
+                          src={
+                            isMobileDevice
+                              ? "/artikelnummerMobiel.png"
+                              : "/artikelnummerdesktop.png"
+                          }
+                          alt="Voorbeeld van een IKEA artikelnummer op de productpagina"
+                          width={1200}
+                          height={800}
+                          className="w-full h-auto rounded border object-contain"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label>Kies IKEA-winkels</Label>

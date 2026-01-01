@@ -36,6 +36,7 @@ export interface IkeaProduct {
   storeId: string;
   articleNumbers: string[];
   offerId?: number;
+  offerNumber?: string;
   originalPrice?: number;
 }
 
@@ -96,6 +97,7 @@ export async function fetchIkeaDeals(storeId: string): Promise<IkeaProduct[]> {
             storeId: entry.storeId || storeId,
             articleNumbers,
             offerId: offer?.id,
+            offerNumber: offer?.offerNumber,
             originalPrice:
               entry.originalPrice ??
               entry.maxPrice ??
@@ -113,7 +115,6 @@ export async function fetchIkeaDeals(storeId: string): Promise<IkeaProduct[]> {
       }
     }
 
-    console.log(`[v0] Fetched ${allProducts.length} products from IKEA store ${storeId}`);
     return allProducts;
   } catch (error) {
     console.error(`[v0] Error fetching IKEA deals for store ${storeId}:`, error);
@@ -182,7 +183,6 @@ async function fetchProductJson(
   if (urls.length === 0) {
     return null;
   }
-  console.log(urls);
 
   const headers = buildIkeaHeaders(userAgent);
 

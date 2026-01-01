@@ -610,10 +610,15 @@ export default function ManagePage() {
 
             {watches.length === 0 ? (
               <Card>
-                <CardContent className="pt-6">
+                <CardContent className="pt-6 space-y-4">
                   <p className="text-center text-muted-foreground">
                     Geen actieve watches gevonden voor dit e-mailadres.
                   </p>
+                  <div className="flex justify-center">
+                    <Button asChild>
+                      <Link href="/#watch-alerts">Nieuwe watch maken</Link>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ) : (

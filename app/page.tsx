@@ -1,13 +1,18 @@
+import { Suspense } from "react";
 import { WatchForm } from "@/components/watch-form";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
+import { AuthCodeRedirect } from "@/components/auth-code-redirect";
 
 export default function Home() {
   return (
     
     <main className="min-h-screen bg-background text-foreground transition-colors">
       <script src="https://t.contentsquare.net/uxa/a5475e7745a1f.js"></script>
+      <Suspense fallback={null}>
+        <AuthCodeRedirect />
+      </Suspense>
       <div className="container mx-auto px-4 py-8">
         <SiteHeader />
 
@@ -25,7 +30,7 @@ export default function Home() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Button asChild>
-              <Link href="/contact">Contact opnemen</Link>
+              <Link href="/login">Account aanmaken</Link>
             </Button>
             <Button asChild variant="outline">
               <Link href="/guide-to-ikea-tweede-kans">Lees de guide</Link>
