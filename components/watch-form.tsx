@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle2, Loader2, Upload, LogIn, Info } from "lucide-react";
+import { CheckCircle2, Loader2, Upload, LogIn, Info, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/components/providers/auth-provider";
 import { IKEA_STORES } from "@/lib/ikea-stores";
@@ -38,6 +38,8 @@ export function WatchForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [wantsTips, setWantsTips] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
   const [isArtikelnummerInfoOpen, setIsArtikelnummerInfoOpen] = useState(false);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
 
@@ -79,7 +81,7 @@ export function WatchForm() {
       ? articleValidationReason ?? "Onjuist artikelnummer."
       : articleValidationStatus === "valid"
       ? "Artikelnummer bevestigd."
-      : "Gebruik het 8-cijferige IKEA artikelnummer van de productpagina.";
+      : "Vul je 8-cijferige artikelnummer in en wij doen de rest.";
   const articleValidationMessageClass = cn(
     articleValidationStatus === "invalid" && "text-destructive",
     articleValidationStatus === "valid" && "text-emerald-600",
@@ -193,13 +195,13 @@ export function WatchForm() {
     const cleanedArticleNumber = articleNumber.replace(/\D/g, "");
 
     if (!user) {
-      setError("Je moet ingelogd zijn om watches aan te maken.");
+      setError("Log in om je deal alert aan te maken.");
       setIsLoading(false);
       return;
     }
 
     if (!isVerified) {
-      setError("Verifieer je e-mail voordat je watches aanmaakt.");
+      setError("Verifieer je e-mail voordat je deal alert live gaat.");
       setIsLoading(false);
       return;
     }
@@ -217,7 +219,7 @@ export function WatchForm() {
     }
 
     if (articleValidationStatus !== "valid") {
-      setError("Controleer het IKEA artikelnummer voordat je een watch aanmaakt.");
+      setError("Controleer het IKEA artikelnummer voordat je je alert start.");
       setIsLoading(false);
       return;
     }
@@ -248,9 +250,12 @@ export function WatchForm() {
       }
 
       setSuccess(true);
+      setShowCelebration(true);
+      window.setTimeout(() => setShowCelebration(false), 1800);
       setArticleNumber("");
       setSelectedStores([]);
       setDesiredQuantity(1);
+      setWantsTips(false);
       resetArticleValidation();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Er is iets misgegaan.");
@@ -384,25 +389,34 @@ export function WatchForm() {
   };
 
   return (
-    <Card>
+    <Card className="relative overflow-hidden border-emerald-200/70 shadow-xl">
+      {showCelebration && (
+        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-emerald-500/10">
+          <div className="animate-bounce rounded-full bg-white/90 p-3 shadow-lg">
+            <Sparkles className="h-6 w-6 text-emerald-600" />
+          </div>
+        </div>
+      )}
       <CardHeader>
-        <CardTitle>Maak een productwaarschuwing</CardTitle>
+        <CardTitle className="text-2xl">Maak mijn favoriete deal alert</CardTitle>
         <CardDescription>
-          Volg IKEA artikelnummer handmatig of importeer ze in bulk.
+          Volg IKEA artikelnummers handmatig of importeer ze in bulk.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="manual">
           <TabsList className="mb-4">
             <TabsTrigger value="manual">Handmatig</TabsTrigger>
-            <TabsTrigger value="csv">CSV-upload</TabsTrigger>
+            <TabsTrigger value="csv" className="font-semibold text-emerald-700">
+              Bulk import CSV
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="manual">
             <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Label htmlFor="article">Artikelnummer</Label>
+                <Label htmlFor="article">Welk artikelnummer (8 cijfers) wil je tracken?</Label>
                 <button
                   type="button"
                   aria-label="Waar vind ik het artikelnummer?"
@@ -513,20 +527,20 @@ export function WatchForm() {
               )}
 
               <div className="space-y-2">
-                <Label>Kies IKEA-winkels</Label>
+                <Label>Welke winkels wil je volgen?</Label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {Object.entries(IKEA_STORES).map(([id, store]) => (
                     <label
                       key={id}
                       className={`flex items-center gap-2 rounded border p-2 text-sm ${
                         selectedStores.includes(id)
-                          ? "border-blue-500 bg-blue-50"
+                          ? "border-emerald-500 bg-emerald-50"
                           : "border-border"
                       }`}
                     >
                       <input
                         type="checkbox"
-                        className="accent-blue-600"
+                        className="accent-emerald-600"
                         checked={selectedStores.includes(id)}
                         onChange={() => toggleStore(id)}
                       />
@@ -540,7 +554,7 @@ export function WatchForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="quantity">Hoeveelheid nodig</Label>
+                <Label htmlFor="quantity">Waarschuw me zodra er minstens ___ stuks beschikbaar zijn</Label>
                 <Input
                   id="quantity"
                   type="number"
@@ -549,11 +563,22 @@ export function WatchForm() {
                   onChange={(e) =>
                     setDesiredQuantity(Math.max(1, Number(e.target.value) || 1))
                   }
+                  className={desiredQuantity > 0 ? "border-emerald-500/70 focus-visible:ring-emerald-500/50" : ""}
                 />
                 <p className="text-xs text-muted-foreground">
                   Waarschuw mij wanneer minstens dit aantal producten beschikbaar is.
                 </p>
               </div>
+
+              <label className="flex items-start gap-2 rounded-lg border border-border bg-muted/30 p-3 text-sm">
+                <input
+                  type="checkbox"
+                  className="mt-1 accent-emerald-600"
+                  checked={wantsTips}
+                  onChange={(event) => setWantsTips(event.target.checked)}
+                />
+                <span>Ik wil ook tips over Tweede Kans deals ontvangen</span>
+              </label>
 
               {error && (
                 <Alert variant="destructive">
@@ -565,7 +590,7 @@ export function WatchForm() {
                 <Alert className="bg-green-50 text-green-900 border-green-200">
                   <CheckCircle2 className="h-4 w-4" />
                   <AlertDescription>
-                    Watch succesvol aangemaakt! Je ontvangt een e-mail zodra je product in een geselecteerde winkel verschijnt.
+                    Je eerste alert is live! Verwacht de eerste mail binnen 24u.
                   </AlertDescription>
                 </Alert>
               )}
@@ -588,7 +613,7 @@ export function WatchForm() {
 
               <Button
                 type="submit"
-                className="w-full"
+                className="h-auto w-full rounded-xl bg-emerald-500 px-6 py-5 text-lg font-semibold text-white shadow-lg transition hover:bg-emerald-600"
                 disabled={
                   isLoading ||
                   loading ||
@@ -600,10 +625,10 @@ export function WatchForm() {
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Watch wordt aangemaakt...
+                    Alert wordt gestart...
                   </>
                 ) : (
-                  "Maak watch aan"
+                  "Ja, stuur me alerts →"
                 )}
              </Button>
             </form>
@@ -634,7 +659,7 @@ export function WatchForm() {
               )}
 
               <div className="flex flex-wrap gap-3">
-                <Button asChild variant="outline">
+                <Button asChild variant="outline" className="border-emerald-500 text-emerald-700">
                   <a href="/api/watches/template" download>
                     Download CSV-sjabloon
                   </a>
@@ -661,20 +686,20 @@ export function WatchForm() {
               </div>
 
               <div className="space-y-2">
-                <Label>Kies IKEA-winkels</Label>
+                <Label>Welke winkels wil je volgen?</Label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {Object.entries(IKEA_STORES).map(([id, store]) => (
                     <label
                       key={id}
                       className={`flex items-center gap-2 rounded border p-2 text-sm ${
                         selectedCsvStores.includes(id)
-                          ? "border-blue-500 bg-blue-50"
+                          ? "border-emerald-500 bg-emerald-50"
                           : "border-border"
                       }`}
                     >
                       <input
                         type="checkbox"
-                        className="accent-blue-600"
+                        className="accent-emerald-600"
                         checked={selectedCsvStores.includes(id)}
                         onChange={() => toggleCsvStore(id)}
                         disabled={!user || !isVerified}
