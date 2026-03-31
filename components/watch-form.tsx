@@ -72,7 +72,7 @@ export function WatchForm() {
     articleValidationStatus === "invalid" &&
       "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/50",
     articleValidationStatus === "valid" &&
-      "border-emerald-500 focus-visible:border-emerald-500 focus-visible:ring-emerald-500/50"
+      "border-primary focus-visible:border-primary focus-visible:ring-primary/50"
   );
   const articleValidationMessage =
     articleValidationStatus === "checking"
@@ -84,7 +84,7 @@ export function WatchForm() {
       : "Vul je 8-cijferige artikelnummer in en wij doen de rest.";
   const articleValidationMessageClass = cn(
     articleValidationStatus === "invalid" && "text-destructive",
-    articleValidationStatus === "valid" && "text-emerald-600",
+    articleValidationStatus === "valid" && "text-primary",
     articleValidationStatus === "checking" && "text-foreground",
     articleValidationStatus === "idle" && "text-muted-foreground"
   );
@@ -389,11 +389,11 @@ export function WatchForm() {
   };
 
   return (
-    <Card className="relative overflow-hidden border-emerald-200/70 shadow-xl">
+    <Card className="relative overflow-hidden border-primary/25 shadow-xl">
       {showCelebration && (
-        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-emerald-500/10">
-          <div className="animate-bounce rounded-full bg-white/90 p-3 shadow-lg">
-            <Sparkles className="h-6 w-6 text-emerald-600" />
+        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-primary/10">
+          <div className="animate-bounce rounded-full bg-card/90 p-3 shadow-lg">
+            <Sparkles className="h-6 w-6 text-primary" />
           </div>
         </div>
       )}
@@ -407,7 +407,7 @@ export function WatchForm() {
         <Tabs defaultValue="manual">
           <TabsList className="mb-4">
             <TabsTrigger value="manual">Handmatig</TabsTrigger>
-            <TabsTrigger value="csv" className="font-semibold text-emerald-700">
+            <TabsTrigger value="csv" className="font-semibold text-primary">
               Bulk import CSV
             </TabsTrigger>
           </TabsList>
@@ -476,7 +476,7 @@ export function WatchForm() {
                             href={productPreview.pipUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-xs text-blue-600 underline"
+                            className="text-xs text-primary underline"
                           >
                             Bekijk op IKEA
                           </a>
@@ -534,13 +534,13 @@ export function WatchForm() {
                       key={id}
                       className={`flex items-center gap-2 rounded border p-2 text-sm ${
                         selectedStores.includes(id)
-                          ? "border-emerald-500 bg-emerald-50"
+                          ? "border-primary bg-accent/50"
                           : "border-border"
                       }`}
                     >
                       <input
                         type="checkbox"
-                        className="accent-emerald-600"
+                        className="accent-primary"
                         checked={selectedStores.includes(id)}
                         onChange={() => toggleStore(id)}
                       />
@@ -563,7 +563,7 @@ export function WatchForm() {
                   onChange={(e) =>
                     setDesiredQuantity(Math.max(1, Number(e.target.value) || 1))
                   }
-                  className={desiredQuantity > 0 ? "border-emerald-500/70 focus-visible:ring-emerald-500/50" : ""}
+                  className={desiredQuantity > 0 ? "border-primary/70 focus-visible:ring-primary/50" : ""}
                 />
                 <p className="text-xs text-muted-foreground">
                   Waarschuw mij wanneer minstens dit aantal producten beschikbaar is.
@@ -573,7 +573,7 @@ export function WatchForm() {
               <label className="flex items-start gap-2 rounded-lg border border-border bg-muted/30 p-3 text-sm">
                 <input
                   type="checkbox"
-                  className="mt-1 accent-emerald-600"
+                  className="mt-1 accent-primary"
                   checked={wantsTips}
                   onChange={(event) => setWantsTips(event.target.checked)}
                 />
@@ -596,7 +596,7 @@ export function WatchForm() {
               )}
 
               {!user && !loading && (
-                <Alert className="bg-blue-50 border-blue-200 text-blue-900">
+                <Alert className="border-primary/20 bg-accent/60 text-foreground">
                   <AlertDescription>
                     <span className="font-medium">Let op:</span> log in of maak een account aan om watches te maken.
                   </AlertDescription>
@@ -604,7 +604,7 @@ export function WatchForm() {
               )}
 
               {!isVerified && user && (
-                <Alert className="bg-amber-50 border-amber-200 text-amber-900">
+                <Alert className="border-secondary bg-secondary/60 text-foreground">
                   <AlertDescription>
                     Controleer je inbox om <strong>{user.email}</strong> te verifiëren voordat je watches maakt.
                   </AlertDescription>
@@ -613,7 +613,7 @@ export function WatchForm() {
 
               <Button
                 type="submit"
-                className="h-auto w-full rounded-xl bg-emerald-500 px-6 py-5 text-lg font-semibold text-white shadow-lg transition hover:bg-emerald-600"
+                className="h-auto w-full rounded-xl bg-primary px-6 py-5 text-lg font-semibold text-primary-foreground shadow-lg transition hover:bg-primary/90"
                 disabled={
                   isLoading ||
                   loading ||
@@ -637,7 +637,7 @@ export function WatchForm() {
           <TabsContent value="csv">
             <div className="space-y-4">
               {!user && (
-                <Alert className="bg-blue-50 border-blue-200 text-blue-900">
+                <Alert className="border-primary/20 bg-accent/60 text-foreground">
                   <AlertDescription className="flex items-center justify-between gap-4">
                     <span>Log in om CSV-import te gebruiken.</span>
                     <Button asChild variant="secondary">
@@ -651,7 +651,7 @@ export function WatchForm() {
               )}
 
               {user && !isVerified && (
-                <Alert className="bg-amber-50 border-amber-200 text-amber-900">
+                <Alert className="border-secondary bg-secondary/60 text-foreground">
                   <AlertDescription>
                     Verifieer <strong>{user.email}</strong> voordat je watches importeert.
                   </AlertDescription>
@@ -659,7 +659,7 @@ export function WatchForm() {
               )}
 
               <div className="flex flex-wrap gap-3">
-                <Button asChild variant="outline" className="border-emerald-500 text-emerald-700">
+                <Button asChild variant="outline" className="border-primary text-primary">
                   <a href="/api/watches/template" download>
                     Download CSV-sjabloon
                   </a>
@@ -693,13 +693,13 @@ export function WatchForm() {
                       key={id}
                       className={`flex items-center gap-2 rounded border p-2 text-sm ${
                         selectedCsvStores.includes(id)
-                          ? "border-emerald-500 bg-emerald-50"
+                          ? "border-primary bg-accent/50"
                           : "border-border"
                       }`}
                     >
                       <input
                         type="checkbox"
-                        className="accent-emerald-600"
+                        className="accent-primary"
                         checked={selectedCsvStores.includes(id)}
                         onChange={() => toggleCsvStore(id)}
                         disabled={!user || !isVerified}

@@ -2,8 +2,12 @@ const baseUrl = "https://ikeatweedekans.com";
 
 const routes = [
   { path: "/", priority: 1 },
-  { path: "/guide-to-ikea-tweede-kans", priority: 0.8 },
+  { path: "/alles-over-ikea-tweede-kans", priority: 0.9 },
+  { path: "/guide-to-ikea-tweede-kans", priority: 0.75 },
   { path: "/ikea-tweede-kans-faq", priority: 0.7 },
+  { path: "/contact", priority: 0.65 },
+  { path: "/privacy", priority: 0.6 },
+  { path: "/disclaimer", priority: 0.6 },
   { path: "/manage", priority: 0.6 },
   { path: "/account", priority: 0.6 },
   { path: "/login", priority: 0.5 },

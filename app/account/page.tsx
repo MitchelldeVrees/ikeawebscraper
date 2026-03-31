@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SiteHeader } from "@/components/site-header";
 import {
   Loader2,
   Mail,
@@ -278,9 +279,10 @@ export default function AccountPage() {
     return (
       <main className="min-h-screen bg-background text-foreground transition-colors">
         <div className="container mx-auto px-4 py-16 max-w-xl space-y-6">
+          <SiteHeader />
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-blue-900">
+              <h1 className="text-2xl font-bold text-foreground">
                 {t.pageTitle}
               </h1>
               <p className="text-sm text-muted-foreground">
@@ -295,7 +297,7 @@ export default function AccountPage() {
               <CardDescription>{t.signInCardDescription}</CardDescription>
             </CardHeader>
             <CardContent>
-              <Alert className="bg-blue-50 border-blue-200 text-blue-900">
+              <Alert className="border-primary/20 bg-accent/60 text-foreground">
                 <AlertDescription className="flex items-center justify-between gap-4">
                   <span>{t.signInNotice}</span>
                   <Button asChild variant="secondary">
@@ -316,6 +318,7 @@ export default function AccountPage() {
   return (
     <main className="min-h-screen bg-background text-foreground transition-colors">
       <div className="container mx-auto px-4 py-16 max-w-3xl space-y-6">
+        <SiteHeader />
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Button asChild variant="ghost" size="icon">
@@ -324,7 +327,7 @@ export default function AccountPage() {
               </Link>
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-blue-900">
+              <h1 className="text-2xl font-bold text-foreground">
                 {t.pageTitle}
               </h1>
               <p className="text-sm text-muted-foreground">
@@ -337,7 +340,7 @@ export default function AccountPage() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         ) : (
           <>
@@ -375,7 +378,7 @@ export default function AccountPage() {
               </CardHeader>
               <CardContent>
                 {!user.email_confirmed_at && (
-                  <Alert className="mb-4 bg-amber-50 border-amber-200 text-amber-900">
+                  <Alert className="mb-4 border-secondary bg-secondary/60 text-foreground">
                     <AlertDescription>
                       {t.verifyNotice(user.email)}
                     </AlertDescription>

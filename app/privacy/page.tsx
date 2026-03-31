@@ -60,7 +60,7 @@ export default function PrivacyPage() {
                 Op grond van de Algemene Verordening Gegevensbescherming (AVG) heb je het recht op inzage,
                 correctie en verwijdering van jouw persoonsgegevens.
                 Stuur een verzoek via de{" "}
-                <Link href="/contact" className="text-emerald-600 underline hover:text-emerald-700">
+                <Link href="/contact" className="text-primary underline hover:opacity-80">
                   contactpagina
                 </Link>{" "}
                 en we verwerken dit zo snel mogelijk.
@@ -78,7 +78,7 @@ export default function PrivacyPage() {
 
           <p className="text-sm text-muted-foreground">
             Vragen over dit privacybeleid?{" "}
-            <Link href="/contact" className="text-emerald-600 underline hover:text-emerald-700">
+            <Link href="/contact" className="text-primary underline hover:opacity-80">
               Neem contact op
             </Link>
             .

@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Lock } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
+import { SiteHeader } from "@/components/site-header";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -73,11 +74,12 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-16 max-w-2xl">
+        <SiteHeader />
         <Card>
           <CardHeader className="flex flex-row items-center gap-3">
-            <Lock className="h-8 w-8 text-blue-600" />
+            <Lock className="h-8 w-8 text-primary" />
             <div>
               <CardTitle>Wachtwoord resetten</CardTitle>
               <CardDescription>

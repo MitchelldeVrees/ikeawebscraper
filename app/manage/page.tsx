@@ -23,6 +23,7 @@ import {
 import Link from "next/link";
 import { useAuth } from "@/components/providers/auth-provider";
 import type { ProductPreview } from "@/lib/ikea-api";
+import { SiteHeader } from "@/components/site-header";
 
 interface StoreWatch {
   id: string;
@@ -504,6 +505,7 @@ export default function ManagePage() {
   return (
     <main className="min-h-screen bg-background text-foreground transition-colors">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <SiteHeader className="mb-6" />
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <Button asChild variant="ghost" size="icon">
@@ -532,7 +534,7 @@ export default function ManagePage() {
             )}
 
             {!loading && !user && (
-              <Alert className="bg-blue-50 border-blue-200 text-blue-900">
+              <Alert className="border-primary/20 bg-accent/60 text-foreground">
                 <AlertDescription className="flex items-center justify-between gap-4">
                   <span>
                     Log in om toegang te krijgen tot je watches.
@@ -548,7 +550,7 @@ export default function ManagePage() {
             )}
 
             {user && !isVerified && (
-              <Alert className="bg-amber-50 border-amber-200 text-amber-900">
+              <Alert className="border-secondary bg-secondary/60 text-foreground">
                 <AlertDescription>
                   Verifieer <strong>{user.email}</strong> via de link in je inbox voordat je watches beheert.
                 </AlertDescription>

@@ -7,6 +7,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, PartyPopper } from "lucide-react";
+import { SiteHeader } from "@/components/site-header";
 
 export default function WelcomePage() {
   const router = useRouter();
@@ -30,12 +31,13 @@ export default function WelcomePage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
+    <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-16 max-w-2xl">
+        <SiteHeader />
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <PartyPopper className="h-8 w-8 text-amber-600" />
+              <PartyPopper className="h-8 w-8 text-primary" />
               <div>
                 <CardTitle>Welkom, {user.email}</CardTitle>
                 <CardDescription>

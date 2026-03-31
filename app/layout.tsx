@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Fraunces, Outfit } from 'next/font/google'
 
 import { AuthProvider } from '@/components/providers/auth-provider'
 import { ThemeProvider } from '@/components/theme-provider'
@@ -10,6 +11,18 @@ const baseUrl = 'https://ikeatweedekans.com/'
 const GA_TRACKING_ID = process.env.NEXT_PUBLIC_GA_TRACKING_ID
 const HOTJAR_ID = process.env.NEXT_PUBLIC_HOTJAR_ID
 const ENABLE_ANALYTICS = process.env.NEXT_PUBLIC_ENABLE_ANALYTICS === 'true'
+
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-fraunces',
+})
+
+const outfit = Outfit({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-outfit',
+})
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
@@ -63,7 +76,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="nl" suppressHydrationWarning>
-      <body className={`font-sans antialiased`}>
+      <body className={`${fraunces.variable} ${outfit.variable} font-sans antialiased`}>
         {ENABLE_ANALYTICS && GA_TRACKING_ID && (
           <>
             <Script

@@ -1,266 +1,286 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/site-header";
-import { fetchIkeaDeals } from "@/lib/ikea-api";
-import { IKEA_STORES } from "@/lib/ikea-stores";
 
 export const metadata = {
-  title: "Ultieme Guide voor IKEA Tweede Kans Deals in Nederland | Alerts & Tips",
+  title: "Alles over IKEA Tweede Kans | De Ultieme Gids voor de Tweedekanshoek",
   description:
-    "Ontdek hoe je de beste IKEA Tweede Kans kortingen vindt in Nederland. Ontvang alerts, tips en bespaar op meubels en accessoires met onze eenvoudige Guide voor tweedehands IKEA producten.",
+    "Alles wat je moet weten over de IKEA Tweedekanshoek in Nederland: hoe het werkt, welke producten je vindt, tips om deals te scoren en hoe je alerts instelt.",
+  alternates: {
+    canonical: "https://ikeatweedekans.com/alles-over-ikea-tweede-kans",
+  },
 };
 
-type BestDealRow = {
-  id: string;
-  offerId?: number;
-  offerNumber?: string;
-  item: string;
-  store: string;
-  originalPrice: number;
-  priceNow: number;
-  savings: number;
-  url?: string;
+const articleSchema = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  headline:
+    "Alles over IKEA Tweede Kans - De Ultieme Gids voor de Tweedekanshoek in Nederland",
+  description:
+    "Complete gids over de IKEA Tweedekanshoek: hoe het werkt, welke producten je vindt, tips voor de beste deals, en hoe alerts je helpen geen koopje te missen.",
+  author: {
+    "@type": "Organization",
+    name: "IKEA Tweede Kans Alerts",
+    url: "https://ikeatweedekans.com",
+  },
+  publisher: {
+    "@type": "Organization",
+    name: "IKEA Tweede Kans Alerts",
+  },
+  mainEntityOfPage: "https://ikeatweedekans.com/alles-over-ikea-tweede-kans",
+  inLanguage: "nl",
 };
 
-const storesToScan = Object.entries(IKEA_STORES).slice(0, 6);
+const storeRows = [
+  ["IKEA Amsterdam", "Noord-Holland", "Ja"],
+  ["IKEA Amersfoort", "Utrecht", "Ja"],
+  ["IKEA Barendrecht (Rotterdam)", "Zuid-Holland", "Ja"],
+  ["IKEA Breda", "Noord-Brabant", "Ja"],
+  ["IKEA Delft", "Zuid-Holland", "Ja"],
+  ["IKEA Duiven", "Gelderland", "Ja"],
+  ["IKEA Eindhoven", "Noord-Brabant", "Ja"],
+  ["IKEA Groningen", "Groningen", "Ja"],
+  ["IKEA Haarlem", "Noord-Holland", "Ja"],
+  ["IKEA Heerlen", "Limburg", "Ja"],
+  ["IKEA Hengelo", "Overijssel", "Ja"],
+  ["IKEA Utrecht", "Utrecht", "Ja"],
+  ["IKEA Zwolle", "Overijssel", "Ja"],
+];
 
-async function getBestDeals(): Promise<BestDealRow[]> {
-  const candidates: BestDealRow[] = [];
-
-  await Promise.all(
-    storesToScan.map(async ([storeId, store]) => {
-      try {
-        const products = await fetchIkeaDeals(storeId);
-  
-
-        for (const product of products) {
-          const priceNow =
-            product.price ??
-            product.minPrice ??
-            product.maxPrice ??
-            undefined;
-          const originalPrice =
-            product.originalPrice ??
-            product.maxPrice ??
-            product.minPrice ??
-            priceNow;
-
-          if (
-            typeof priceNow !== "number" ||
-            typeof originalPrice !== "number"
-          ) {
-            continue;
-          }
-
-          const savings = originalPrice - priceNow;
-          if (savings <= 1) {
-            continue;
-          }
-
-          const offerId = product.offerId;
-          const offerNumber = product.offerNumber;
-          const resolvedUrl =
-            product.pipUrl?.startsWith("http") ?? false
-              ? product.pipUrl
-              : product.pipUrl
-              ? `https://www.ikea.com${product.pipUrl}`
-              : undefined;
-
-          candidates.push({
-            id: `${storeId}-${product.id}-${offerId ?? "nooffer"}`,
-            offerId,
-            offerNumber,
-            item: product.name ?? `Artikel ${product.id}`,
-            store: store.name,
-            originalPrice,
-            priceNow,
-            savings,
-            url:
-              resolvedUrl ??
-              getStoreCircularUrl(store.name, offerNumber ?? product.id),
-          });
-        }
-      } catch (error) {
-        console.error(
-          `Guide: kon aanbiedingen voor ${store.name} niet ophalen:`,
-          error
-        );
-      }
-    })
-  );
-
-  return candidates
-    .sort((a, b) => b.savings - a.savings)
-    .slice(0, 5);
-}
-
-function getStoreCircularUrl(storeName: string, productId: string) {
-  const slug = storeName
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-
-  return `https://www.ikea.com/nl/nl/campaigns/tweedekanshoek-online-pubebfe3f30/#/${slug}/${productId}`;
-}
-
-function formatCurrency(value: number) {
-  return value.toLocaleString("nl-NL", {
-    style: "currency",
-    currency: "EUR",
-    minimumFractionDigits: 2,
-  });
-}
-
-export default async function GuidePage() {
-  const bestDeals = await getBestDeals();
-
+export default function GuidePage() {
   return (
-    <main className="min-h-screen bg-background text-foreground transition-colors">
-      <div className="container mx-auto px-4 py-8 space-y-10">
+    <main className="min-h-screen bg-background text-foreground">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
+
+      <div className="container mx-auto px-4 py-8">
         <SiteHeader />
-        <section className="text-center">
-          <p className="text-xs uppercase tracking-[0.4em] text-muted-foreground mb-2">
-            IKEA Tweede Kans Guide Nederland
-          </p>
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">
-            Ultieme Guide voor IKEA Tweede Kans Deals in Nederland
-          </h1>
-          <p className="text-sm md:text-base text-muted-foreground mx-auto max-w-2xl">
-            Leer alles over IKEA Tweede Kans, de afdeling voor tweedehands en kortingproducten in Nederlandse IKEA winkels. Ontdek hoe je alerts instelt, deals vergelijkt en maximaal bespaart op duurzame meubels en accessoires.
-          </p>
-        </section>
 
-        <section className="space-y-4">
-          <h2 className="text-2xl font-semibold">Wat is IKEA Tweede Kans?</h2>
-          <p className="text-sm md:text-base text-muted-foreground">
-            IKEA Tweede Kans, ook bekend als de Tweedekanshoek of Second Chance Corner, is een speciale afdeling in alle IKEA winkels in Nederland waar producten een tweede leven krijgen. Dit omvat showmodellen, herverpakte artikelen, uitlopende producten en licht beschadigde items. Volgens IKEA Nederland ondersteunt dit initiatief duurzaamheid door afval te verminderen en producten langer te laten meegaan. Producten worden verkocht tegen gereduceerde prijzen, vaak met duidelijke labels die de reden voor de korting aangeven, zoals &apos;lichte schade&apos; of &apos;ex-display&apos;.
-          </p>
-          <p className="text-sm md:text-base text-muted-foreground">
-            In Nederland vind je IKEA Tweede Kans producten in categorieën zoals meubels, accessoires, keukenartikelen en verlichting. Voorbeelden zijn boekenkasten, bedden en stoelen die anders zouden worden weggegooid. Online is de Tweede Kans hoek beschikbaar voor IKEA Family leden, waar je deals kunt bekijken en reserveren via de IKEA website.
-          </p>
-        </section>
+        <article className="mx-auto max-w-4xl space-y-8">
+          <header className="rounded-2xl bg-primary px-6 py-10 text-primary-foreground shadow-sm">
+            <p className="mb-3 inline-flex rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-secondary-foreground">
+              Ultieme gids 2026
+            </p>
+            <h1 className="text-4xl leading-tight md:text-5xl">
+              Alles over IKEA Tweede Kans
+            </h1>
+            <p className="mt-4 max-w-3xl text-primary-foreground/90">
+              De complete gids over de Tweedekanshoek: wat het is, hoe het
+              werkt, waar je de beste deals vindt, en hoe je nooit meer een
+              koopje mist.
+            </p>
+          </header>
 
-        <section className="space-y-4">
-          <h2 className="text-2xl font-semibold">Hoe Werkt IKEA Tweede Kans in Nederland?</h2>
-          <p className="text-sm md:text-base text-muted-foreground">
-            In de Tweede Kans afdeling van IKEA Nederland worden producten direct in de winkel aangeboden en kunnen onmiddellijk worden meegenomen. Sommige items zijn al gemonteerd, en je kunt gereedschap lenen om ze te demonteren met hulp van het personeel. Prijzen variëren per winkel en productconditie, maar besparingen kunnen oplopen tot 50% of meer vergeleken met nieuwe prijzen.
-          </p>
-          <p className="text-sm md:text-base text-muted-foreground">
-            Belangrijke regels: Er is geen transportreservering mogelijk voor Tweede Kans items. De standaard 2-jarige garantie geldt alleen voor functionaliteit, en hangt af van de reden voor doorverkoop. Matrassen uit de Tweede Kans hebben geen 90-dagen omruilgarantie. Voor online aankopen moet je lid zijn van IKEA Family om toegang te krijgen tot exclusieve deals.
-          </p>
-        </section>
+          <nav className="rounded-2xl border border-border bg-card p-5 shadow-sm" aria-label="Inhoudsopgave">
+            <h2 className="text-xl">Inhoudsopgave</h2>
+            <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-muted-foreground">
+              <li><a className="text-primary underline" href="#wat-is">Wat is de IKEA Tweedekanshoek?</a></li>
+              <li><a className="text-primary underline" href="#producten">Welke producten vind je er?</a></li>
+              <li><a className="text-primary underline" href="#hoe-werkt">Hoe werkt het in de winkel en online</a></li>
+              <li><a className="text-primary underline" href="#vestigingen">Alle vestigingen met Tweedekanshoek</a></li>
+              <li><a className="text-primary underline" href="#garantie">Garantie en retourbeleid</a></li>
+              <li><a className="text-primary underline" href="#terugkoop">De IKEA terugkoopservice</a></li>
+              <li><a className="text-primary underline" href="#tips">8 tips om betere deals te scoren</a></li>
+              <li><a className="text-primary underline" href="#alerts">Nooit meer een deal missen met alerts</a></li>
+              <li><a className="text-primary underline" href="#faq">Veelgestelde vragen</a></li>
+            </ol>
+          </nav>
 
-        <section className="space-y-4">
-          <h2 className="text-2xl font-semibold">Voordelen van IKEA Tweede Kans Deals</h2>
-          <p className="text-sm md:text-base text-muted-foreground">
-            Door te shoppen in de IKEA Tweede Kans bespaar je niet alleen geld, maar draag je ook bij aan duurzaamheid. IKEA Nederland benadrukt dat dit helpt om miljoenen meubels per jaar uit de afvalstroom te houden. Daarnaast kun je gratis reserveonderdelen bestellen om producten te repareren, wat de levensduur verlengt. Voor shoppers in Nederland betekent dit betaalbare, kwalitatieve items met een kleinere ecologische voetafdruk.
-          </p>
-        </section>
+          <section id="wat-is" className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <h2 className="text-3xl">Wat is de IKEA Tweedekanshoek?</h2>
+            <p className="mt-4 text-muted-foreground">
+              De Tweedekanshoek (ook wel IKEA Tweede Kans of Tweede Kansje) is
+              een vaste afdeling in IKEA winkels waar producten een tweede leven
+              krijgen. Denk aan showmodellen, herverpakte artikelen, producten
+              met lichte beschadiging of uitlopende modellen met stevige
+              korting.
+            </p>
+            <p className="mt-3 text-muted-foreground">
+              Voor jou betekent dat: functioneel goede IKEA producten voor vaak
+              30% tot 70% minder dan de nieuwprijs. Voor IKEA betekent het:
+              minder verspilling en meer hergebruik.
+            </p>
+            <div className="mt-4 rounded-xl border-l-4 border-primary bg-accent/50 px-4 py-3 text-sm text-muted-foreground">
+              Elk product dat via de Tweedekanshoek wordt verkocht, voorkomt
+              extra afval en verlengt de levensduur van meubels en accessoires.
+            </div>
+          </section>
 
-        <section className="space-y-4">
-          <h2 className="text-2xl font-semibold">IKEA Tweede Kans Winkels in Nederland</h2>
-          <p className="text-sm md:text-base text-muted-foreground">
-            De Tweede Kans hoek is beschikbaar in alle IKEA winkels in Nederland. Populaire locaties zijn onder andere IKEA Amsterdam, IKEA Delft, IKEA Eindhoven, IKEA Groningen, IKEA Haarlem, IKEA Heerlen, IKEA Hengelo, IKEA Utrecht en IKEA Zwolle. Controleer de openingstijden op de IKEA website voor je bezoek.
-          </p>
-        </section>
+          <section id="producten" className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <h2 className="text-3xl">Welke producten vind je in de Tweedekanshoek?</h2>
+            <p className="mt-4 text-muted-foreground">
+              Het aanbod wisselt continu. Dit zijn de meest voorkomende categorieen:
+            </p>
+            <ul className="mt-3 list-disc space-y-2 pl-5 text-muted-foreground">
+              <li><strong className="text-foreground">Showmodellen:</strong> meestal in goede staat met minimale gebruikssporen.</li>
+              <li><strong className="text-foreground">Teruggebrachte producten:</strong> gecontroleerd en opnieuw aangeboden.</li>
+              <li><strong className="text-foreground">Uitlopend assortiment:</strong> laatste stuks van modellen die verdwijnen.</li>
+              <li><strong className="text-foreground">Licht beschadigde artikelen:</strong> kleine cosmetische schade, vaak grote korting.</li>
+              <li><strong className="text-foreground">Herverpakte producten:</strong> verpakking beschadigd, product vaak ongebruikt.</li>
+            </ul>
+            <p className="mt-3 text-muted-foreground">
+              Veelvoorkomende voorbeelden: KALLAX, BILLY, MALM, bureaus, stoelen,
+              verlichting, keukenaccessoires en textiel.
+            </p>
+          </section>
 
-       
+          <section id="hoe-werkt" className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <h2 className="text-3xl">Hoe werkt het in de winkel en online?</h2>
+            <h3 className="mt-5 text-xl">In de winkel</h3>
+            <p className="mt-2 text-muted-foreground">
+              Je loopt naar de Tweedekanshoek, controleert de sticker en rekent
+              direct af. Op de sticker staat de reden van korting en de staat
+              van het product.
+            </p>
+            <h3 className="mt-5 text-xl">Online reserveren</h3>
+            <ol className="mt-2 list-decimal space-y-2 pl-5 text-muted-foreground">
+              <li>Word gratis IKEA Family lid.</li>
+              <li>Kies je vestiging op de IKEA website.</li>
+              <li>Bekijk het Tweede Kans aanbod per vestiging.</li>
+              <li>Reserveer en bevestig via je account.</li>
+              <li>Kies ophaaltijdslot uit de e-mail.</li>
+              <li>Betaal in de winkel (pin) bij ophalen.</li>
+            </ol>
+            <div className="mt-4 rounded-xl border-l-4 border-secondary bg-secondary/35 px-4 py-3 text-sm text-muted-foreground">
+              Niet elk product staat online. De fysieke hoek in de winkel heeft
+              vaak extra aanbod dat je online niet ziet.
+            </div>
+          </section>
 
-        <section className="space-y-4">
-          <h2 className="text-2xl font-semibold">Voorbeeld Deals Vergelijking</h2>
-          <p className="text-sm md:text-base text-muted-foreground">
-            Hieronder een voorbeeld van typische IKEA Tweede Kans deals in Nederland. Prijzen kunnen variëren, maar dit geeft een idee van mogelijke besparingen op populaire producten.
-          </p>
-          <div className="overflow-auto rounded-2xl border border-border">
-            <table className="min-w-full text-left">
-              <thead className="bg-gradient-to-r from-primary/10 to-transparent text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                <tr>
-                  <th className="px-3 py-2">Item</th>
-                  <th className="px-3 py-2">Nieuwe Prijs</th>
-                  <th className="px-3 py-2">Tweede Kans Prijs</th>
-                  <th className="px-3 py-2">Besparing</th>
-                </tr>
-              </thead>
-              <tbody className="text-sm">
-                {bestDeals.length > 0 ? (
-                  bestDeals.map((row) => (
-                    <tr key={row.id} className="border-t border-border">
-                      <td className="px-3 py-2">
-                        <div className="font-semibold">
-                          {row.url ? (
-                            <a
-                              href={row.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 underline"
-                            >
-                              {row.item}
-                            </a>
-                          ) : (
-                            row.item
-                          )}
-                        </div>
-                        <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                          {row.store}
-                        </p>
-                      </td>
-                      <td className="px-3 py-2 text-muted-foreground">
-                        {formatCurrency(row.originalPrice)}
-                      </td>
-                      <td className="px-3 py-2 font-semibold">{formatCurrency(row.priceNow)}</td>
-                      <td className="px-3 py-2 text-emerald-600">
-                        {formatCurrency(row.savings)}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr className="border-t border-border">
-                    <td className="px-3 py-8 text-center text-xs text-muted-foreground" colSpan={4}>
-                      Geen actuele Tweede Kans deals gevonden. Probeer het later opnieuw.
-                    </td>
+          <section id="vestigingen" className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <h2 className="text-3xl">Alle IKEA vestigingen met Tweedekanshoek</h2>
+            <p className="mt-3 text-muted-foreground">
+              Alle volledige IKEA winkels in Nederland hebben een Tweedekanshoek.
+              Overzicht:
+            </p>
+            <div className="mt-4 overflow-auto rounded-xl border border-border">
+              <table className="min-w-full text-left text-sm">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="px-4 py-3">Vestiging</th>
+                    <th className="px-4 py-3">Provincie</th>
+                    <th className="px-4 py-3">Online Tweede Kans</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {storeRows.map((row) => (
+                    <tr key={row[0]}>
+                      <td className="px-4 py-3 font-medium">{row[0]}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{row[1]}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{row[2]}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-3 text-sm text-muted-foreground">
+              IKEA Leeuwarden is een Plan &amp; Order Point en heeft geen fysieke Tweedekanshoek.
+            </p>
+          </section>
 
-        <section className="space-y-4">
-          <h2 className="text-2xl font-semibold">Tips voor IKEA Tweede Kans in Nederland</h2>
-          <ul className="space-y-3 text-sm text-muted-foreground list-disc list-inside">
-            <li>Stel alerts in voor meerdere varianten van hetzelfde artikelnummer om restocks sneller te vangen in Nederlandse winkels.</li>
-            <li>Controleer reistijd en brandstofkosten voordat je naar de winkel gaat, vooral als je ver van een IKEA woont.</li>
-            <li>Inspecteer verpakking of labels om te verifiëren dat het een echte Tweede Kans deal is en controleer op schade.</li>
-            <li>Word IKEA Family lid voor toegang tot online Tweede Kans deals en extra kortingen.</li>
-            <li>Bezoek winkels vroeg in de ochtend voor de beste selectie, aangezien voorraden snel veranderen.</li>
-            <li>Overweeg huren van een busje via IKEA&apos;s partner Hertz voor grote aankopen.</li>
-          </ul>
-        </section>
+          <section id="garantie" className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <h2 className="text-3xl">Garantie en retourbeleid</h2>
+            <ul className="mt-4 list-disc space-y-2 pl-5 text-muted-foreground">
+              <li><strong className="text-foreground">2 jaar garantie op functionaliteit</strong> van het product.</li>
+              <li><strong className="text-foreground">Geen garantie op bekende schade</strong> die op de sticker staat.</li>
+              <li><strong className="text-foreground">365 dagen retourbeleid</strong>, ook voor Tweede Kans aankopen.</li>
+              <li><strong className="text-foreground">Matrassen:</strong> geen 90-dagen omruilgarantie.</li>
+            </ul>
+            <div className="mt-4 rounded-xl border-l-4 border-primary bg-accent/50 px-4 py-3 text-sm text-muted-foreground">
+              Controleer het product altijd goed bij ophalen. Je bent bij online
+              reservering niet verplicht om af te nemen als het tegenvalt.
+            </div>
+          </section>
 
-        <section className="rounded-2xl border border-border p-6 bg-gradient-to-br from-primary/10 to-transparent space-y-4">
-          <h2 className="text-2xl font-semibold">Klaar om te Besparen met IKEA Tweede Kans?</h2>
-          <p className="text-sm text-muted-foreground">
-            Gebruik ons alert tool om IKEA Tweede Kans artikelen in Nederland te tracken. Je krijgt direct notificaties zodra ze beschikbaar zijn, zodat je voor de drukte toeslaat.
-          </p>
-          <ButtonLink />
-        </section>
+          <section id="terugkoop" className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <h2 className="text-3xl">De IKEA terugkoopservice</h2>
+            <p className="mt-3 text-muted-foreground">
+              Een groot deel van het aanbod ontstaat via de IKEA terugkoopservice:
+              klanten leveren meubels in, IKEA controleert ze, en verkoopt ze
+              opnieuw via de Tweedekanshoek.
+            </p>
+            <ol className="mt-3 list-decimal space-y-2 pl-5 text-muted-foreground">
+              <li>Vul je meubelgegevens online in.</li>
+              <li>Ontvang een indicatie van het tegoed.</li>
+              <li>Breng je product binnen de termijn naar de winkel.</li>
+              <li>Na controle ontvang je winkeltegoed.</li>
+            </ol>
+            <p className="mt-3 text-muted-foreground">
+              Nieuwe acties, zoals tijdelijke ophaalservices, maken dit proces
+              nog toegankelijker voor grotere meubels.
+            </p>
+          </section>
 
-        <footer className="text-sm text-muted-foreground border-t border-border pt-4">
-          <p>Dit is een onafhankelijke tool en is niet gelieerd aan IKEA.</p>
-          <p>Beeldreferenties via gratis stock services. Alle informatie gebaseerd op openbare IKEA Nederland bronnen.</p>
-        </footer>
+          <section id="tips" className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <h2 className="text-3xl">8 tips om de beste deals te scoren</h2>
+            <ol className="mt-4 list-decimal space-y-2 pl-5 text-muted-foreground">
+              <li>Stel alerts in per artikelnummer.</li>
+              <li>Volg meerdere vestigingen tegelijk.</li>
+              <li>Ga op rustige momenten, vaak doordeweeks in de ochtend.</li>
+              <li>Word IKEA Family lid voor online toegang.</li>
+              <li>Zoek gericht op product en maat voordat je gaat.</li>
+              <li>Lees altijd de productsticker volledig.</li>
+              <li>Controleer afmetingen vooraf.</li>
+              <li>Combineer koopjes met terugkooptegoed.</li>
+            </ol>
+          </section>
+
+          <section id="alerts" className="rounded-2xl bg-primary px-6 py-8 text-primary-foreground shadow-sm">
+            <h2 className="text-3xl text-primary-foreground">Nooit meer een deal missen?</h2>
+            <p className="mt-3 max-w-3xl text-primary-foreground/90">
+              Het aanbod verandert snel. Met IKEA Tweede Kans Alerts stel je per
+              artikel en vestiging je voorkeuren in en krijg je direct een mail
+              bij een match.
+            </p>
+            <div className="mt-5">
+              <Button asChild variant="secondary" size="lg">
+                <Link href="/#watch-alerts">Stel nu gratis je alerts in</Link>
+              </Button>
+            </div>
+          </section>
+
+          <section id="faq" className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <h2 className="text-3xl">Veelgestelde vragen over IKEA Tweede Kans</h2>
+            <div className="mt-4 space-y-4">
+              <div>
+                <h3 className="text-xl">Kan ik Tweede Kans producten laten bezorgen?</h3>
+                <p className="mt-1 text-muted-foreground">Nee, meestal niet. Je haalt ze zelf op. Voor grote items kun je een bus of aanhanger regelen.</p>
+              </div>
+              <div>
+                <h3 className="text-xl">Heb ik IKEA Family nodig?</h3>
+                <p className="mt-1 text-muted-foreground">Voor winkelkoopjes niet, voor online reserveren wel.</p>
+              </div>
+              <div>
+                <h3 className="text-xl">Hoe groot zijn de kortingen?</h3>
+                <p className="mt-1 text-muted-foreground">Vaak 30% tot 70%, afhankelijk van product en staat.</p>
+              </div>
+              <div>
+                <h3 className="text-xl">Is het aanbod in elke winkel hetzelfde?</h3>
+                <p className="mt-1 text-muted-foreground">Nee, elke vestiging heeft een eigen voorraad en eigen rotatie.</p>
+              </div>
+              <div>
+                <h3 className="text-xl">Hoe vaak ververst het aanbod?</h3>
+                <p className="mt-1 text-muted-foreground">Dagelijks, soms meerdere keren per dag. Daarom werken alerts het best.</p>
+              </div>
+            </div>
+          </section>
+
+          <footer className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground shadow-sm">
+            <p><strong className="text-foreground">Over deze gids:</strong> bijgewerkt in maart 2026.</p>
+            <p className="mt-2">
+              IKEA Tweede Kans Alerts is een onafhankelijke tool en niet gelieerd
+              aan IKEA of Ingka Group.
+            </p>
+            <p className="mt-4">
+              <Link href="/" className="text-primary underline">
+                Terug naar ikeatweedekans.com
+              </Link>
+            </p>
+          </footer>
+        </article>
       </div>
     </main>
-  );
-}
-
-function ButtonLink() {
-  return (
-    <Button asChild size="lg">
-      <Link href="/#watch-alerts">Stel Nu Alerts In</Link>
-    </Button>
   );
 }

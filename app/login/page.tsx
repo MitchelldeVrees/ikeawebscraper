@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, MailCheck, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
+import { SiteHeader } from "@/components/site-header";
 
 type AuthMode = "login" | "signup";
 
@@ -114,15 +115,16 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-16 max-w-2xl">
+        <SiteHeader />
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
               {mode === "login" ? (
-                <ShieldCheck className="h-8 w-8 text-blue-600" />
+                <ShieldCheck className="h-8 w-8 text-primary" />
               ) : (
-                <MailCheck className="h-8 w-8 text-blue-600" />
+                <MailCheck className="h-8 w-8 text-primary" />
               )}
               <div>
                 <CardTitle>{mode === "login" ? "Inloggen" : "Maak een account"}</CardTitle>

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { BellRing, Euro, Store, Timer } from "lucide-react";
+import { ArrowRight, Leaf, Store, Timer } from "lucide-react";
 
 import { AuthCodeRedirect } from "@/components/auth-code-redirect";
 import { SiteHeader } from "@/components/site-header";
@@ -11,8 +11,8 @@ const WatchForm = dynamic(
   () => import("@/components/watch-form").then((mod) => mod.WatchForm),
   {
     loading: () => (
-      <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-        <p className="text-sm text-slate-400">Laden...</p>
+      <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <p className="text-sm text-muted-foreground">Laden...</p>
       </div>
     ),
   }
@@ -22,164 +22,140 @@ const HomeDynamic = dynamic(
   () => import("@/components/home-dynamic").then((mod) => mod.HomeDynamic)
 );
 
-export default function Home() {
-  const deals = [
-    { name: "BILLY boekenkast", status: "Zojuist", price: "€49", save: "-41%" },
-    { name: "KALLAX vakkenkast", status: "4 min geleden", price: "€39", save: "-46%" },
-    { name: "POANG fauteuil", status: "8 min geleden", price: "€59", save: "-37%" },
-    { name: "IDASEN bureau", status: "12 min geleden", price: "€199", save: "-44%" },
-    { name: "MALM ladekast", status: "17 min geleden", price: "€79", save: "-35%" },
-  ];
+const deals = [
+  { name: "BILLY boekenkast", status: "Zojuist", price: "€49", save: "-41%" },
+  { name: "KALLAX vakkenkast", status: "4 min geleden", price: "€39", save: "-46%" },
+  { name: "POANG fauteuil", status: "8 min geleden", price: "€59", save: "-37%" },
+  { name: "IDASEN bureau", status: "12 min geleden", price: "€199", save: "-44%" },
+];
 
+const faq = [
+  {
+    q: "Hoe snel krijg ik notificaties?",
+    a: "We checken voorraad elke paar minuten en sturen direct een e-mail zodra jouw match verschijnt.",
+  },
+  {
+    q: "Is deze tool verbonden met IKEA?",
+    a: "Nee. De dienst is onafhankelijk en gebruikt alleen publieke voorraadinformatie.",
+  },
+  {
+    q: "Kan ik meerdere winkels en artikelen volgen?",
+    a: "Ja, je kunt meerdere artikelnummers en meerdere Nederlandse vestigingen tegelijk volgen.",
+  },
+  {
+    q: "Zijn mijn gegevens veilig?",
+    a: "Ja. Je e-mail wordt alleen gebruikt voor alerts en accountfunctionaliteit.",
+  },
+];
+
+export default function Home() {
   return (
-    <main className="min-h-screen bg-[#f9fafb] text-foreground">
+    <main className="min-h-screen bg-background text-foreground">
       <Suspense fallback={null}>
         <AuthCodeRedirect />
       </Suspense>
 
-      <div className="container mx-auto px-4 pb-16 pt-4 md:pt-6">
+      <div className="mx-auto max-w-7xl px-4 pb-16 pt-4 md:pt-6">
         <SiteHeader />
 
-        {/* Hero */}
-        <section className="mb-14 grid gap-10 lg:grid-cols-[1fr,420px] lg:items-start lg:gap-16">
-          <div className="pt-2 lg:pt-10">
-            <p className="mb-5 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600">
-              Realtime IKEA Tweede Kans alerts
-            </p>
-            <h1 className="mb-6 max-w-lg text-4xl font-extrabold leading-[1.1] tracking-tight text-slate-900 md:text-5xl lg:text-[3.5rem]">
-              Mis nooit meer een IKEA Tweede Kans deal
+        <section className="mb-10 rounded-2xl bg-card p-5 shadow-sm">
+          <div className="space-y-4">
+            <div className="inline-flex items-center rounded-full bg-accent px-3 py-1 text-xs font-semibold text-primary">
+              Goedkoper wonen + minder verspilling
+            </div>
+            <h1 className="text-4xl leading-tight md:text-5xl">
+              Vind jouw IKEA favorieten in tweede kans voordat anderen ze zien
             </h1>
-            <p className="mb-8 max-w-md text-lg text-slate-500">
-              Ontvang direct een e-mail zodra jouw product in de Tweede Kanshoek verschijnt — in alle Nederlandse winkels.
+            <p className="max-w-2xl text-base text-muted-foreground md:text-lg">
+              Voor mensen die bewust willen kopen: bespaar op meubels en geef producten een tweede leven met automatische alerts.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Button
-                asChild
-                size="lg"
-                className="h-auto rounded-xl bg-emerald-500 px-8 py-4 text-base font-semibold text-white shadow-sm hover:bg-emerald-600"
-              >
-                <Link href="#watch-alerts">Start gratis alert</Link>
+              <Button asChild size="lg">
+                <Link href="#watch-alerts">Start duurzame alert</Link>
               </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="h-auto rounded-xl border-slate-200 bg-white px-7 py-4 text-base text-slate-700 hover:bg-slate-50"
-              >
-                <Link href="#hoe-het-werkt">Hoe het werkt</Link>
+              <Button asChild size="lg" variant="secondary">
+                <Link href="/guide-to-ikea-tweede-kans">Bekijk deals guide</Link>
               </Button>
             </div>
-            <div className="mt-10 flex flex-wrap gap-6 border-t border-slate-200 pt-8 text-sm text-slate-500">
-              <span className="flex items-center gap-2">
-                <Euro className="h-4 w-4 text-emerald-500" />
+            <div className="flex flex-wrap gap-5 border-t border-border pt-4 text-sm text-muted-foreground">
+              <span className="inline-flex items-center gap-2">
+                <Leaf className="h-4 w-4 text-primary" />
                 Tot 50% goedkoper
               </span>
-              <span className="flex items-center gap-2">
-                <Store className="h-4 w-4 text-emerald-500" />
+              <span className="inline-flex items-center gap-2">
+                <Store className="h-4 w-4 text-primary" />
                 Alle NL winkels
               </span>
-              <span className="flex items-center gap-2">
-                <Timer className="h-4 w-4 text-emerald-500" />
-                5–10 min voor iedereen
+              <span className="inline-flex items-center gap-2">
+                <Timer className="h-4 w-4 text-primary" />
+                Elke paar minuten update
               </span>
             </div>
           </div>
-
-          <div id="watch-alerts" className="lg:pt-4">
-            <WatchForm />
-          </div>
         </section>
 
-        {/* Stats */}
-        <div className="mb-14">
+        <section id="watch-alerts" className="mb-10">
+          <WatchForm />
+        </section>
+
+        <section className="mb-10">
           <HomeDynamic />
-        </div>
+        </section>
 
-        {/* How it works */}
-        <section id="hoe-het-werkt" className="mb-14">
-          <h2 className="mb-8 text-2xl font-bold text-slate-900">Hoe het werkt</h2>
-          <div className="grid gap-5 md:grid-cols-3">
-            <article className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
-              <span className="mb-5 flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50 text-sm font-bold text-emerald-600">
-                1
-              </span>
-              <h3 className="mb-2 font-semibold text-slate-900">Kies je artikel</h3>
-              <p className="text-sm leading-relaxed text-slate-500">
-                Voer het 8-cijferige IKEA-artikelnummer in en kies je minimale voorraad.
+        <section id="hoe-het-werkt" className="mb-10 rounded-2xl bg-card p-5 shadow-sm">
+          <h2 className="text-3xl">Zo werkt slim tweede kans kopen</h2>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <article className="rounded-xl bg-muted/60 p-4">
+              <h3 className="text-lg">1. Artikelnummer invoeren</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Gebruik het 8-cijferige IKEA nummer om exact de juiste producten te volgen.
               </p>
             </article>
-            <article className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
-              <span className="mb-5 flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50 text-sm font-bold text-emerald-600">
-                2
-              </span>
-              <h3 className="mb-2 font-semibold text-slate-900">Selecteer winkels</h3>
-              <p className="text-sm leading-relaxed text-slate-500">
-                Volg meerdere vestigingen tegelijk — zonder handmatig te refreshen.
+            <article className="rounded-xl bg-muted/60 p-4">
+              <h3 className="text-lg">2. Winkels kiezen</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Volg meerdere vestigingen tegelijk, van Utrecht tot Groningen.
               </p>
             </article>
-            <article className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
-              <span className="mb-5 flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50 text-sm font-bold text-emerald-600">
-                3
-              </span>
-              <h3 className="mb-2 font-semibold text-slate-900">Ontvang je alert</h3>
-              <p className="text-sm leading-relaxed text-slate-500">
-                Wij checken elke paar minuten en mailen je direct zodra er voorraad is.
+            <article className="rounded-xl bg-muted/60 p-4">
+              <h3 className="text-lg">3. Direct alert</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Ontvang direct een e-mail zodra voorraad beschikbaar wordt.
               </p>
             </article>
           </div>
         </section>
 
-        {/* Example deals table */}
-        <section className="mb-14">
-          <h2 className="mb-6 text-2xl font-bold text-slate-900">Voorbeeld deals</h2>
-          <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-100">
-            <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-slate-100">
-                <tr>
-                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-widest text-slate-400">Product</th>
-                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-widest text-slate-400">Origineel</th>
-                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-widest text-slate-400">Tweede Kans</th>
-                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-widest text-slate-400">Besparing</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                <tr className="hover:bg-slate-50/50">
-                  <td className="px-5 py-4 font-medium text-slate-900">IDASEN bureau</td>
-                  <td className="px-5 py-4 text-slate-400 line-through">€549</td>
-                  <td className="px-5 py-4 font-semibold text-slate-900">€199</td>
-                  <td className="px-5 py-4 font-semibold text-emerald-600">€350</td>
-                </tr>
-                <tr className="hover:bg-slate-50/50">
-                  <td className="px-5 py-4 font-medium text-slate-900">BILLY boekenkast</td>
-                  <td className="px-5 py-4 text-slate-400 line-through">€99</td>
-                  <td className="px-5 py-4 font-semibold text-slate-900">€49</td>
-                  <td className="px-5 py-4 font-semibold text-emerald-600">€50</td>
-                </tr>
-                <tr className="hover:bg-slate-50/50">
-                  <td className="px-5 py-4 font-medium text-slate-900">POANG fauteuil</td>
-                  <td className="px-5 py-4 text-slate-400 line-through">€95</td>
-                  <td className="px-5 py-4 font-semibold text-slate-900">€59</td>
-                  <td className="px-5 py-4 font-semibold text-emerald-600">€36</td>
-                </tr>
-              </tbody>
-            </table>
+        <section className="mb-10 rounded-2xl bg-card p-5 shadow-sm">
+          <h2 className="text-3xl">Gebouwd voor jouw situatie</h2>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <article className="rounded-xl bg-muted/60 p-4 text-sm text-muted-foreground">
+              Budget huishoudens: maximaal besparen op inrichting en vervanging.
+            </article>
+            <article className="rounded-xl bg-muted/60 p-4 text-sm text-muted-foreground">
+              Specifieke zoekers: exact artikelnummer, exacte winkel, exacte timing.
+            </article>
+            <article className="rounded-xl bg-muted/60 p-4 text-sm text-muted-foreground">
+              Kleinzakelijk: monitor meerdere producten met CSV import.
+            </article>
           </div>
         </section>
 
-        {/* Recent alerts */}
-        <section className="mb-14">
-          <h2 className="mb-6 text-2xl font-bold text-slate-900">Recent gealerteerde deals</h2>
-          <div className="flex snap-x gap-4 overflow-x-auto pb-2">
+        <section className="mb-10 rounded-2xl bg-card p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 className="text-3xl">Recent gealerteerde deals</h2>
+            <Link href="/guide-to-ikea-tweede-kans" className="inline-flex items-center gap-1 text-sm font-semibold text-primary">
+              Naar deal guide <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <div className="grid gap-3 md:grid-cols-4">
             {deals.map((deal) => (
-              <article
-                key={deal.name}
-                className="min-w-[210px] snap-start rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100 transition hover:shadow-md"
-              >
-                <p className="mb-3 text-xs text-slate-400">{deal.status}</p>
-                <h3 className="text-sm font-semibold text-slate-900">{deal.name}</h3>
-                <div className="mt-4 flex items-end justify-between">
-                  <span className="text-xl font-bold text-slate-900">{deal.price}</span>
-                  <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+              <article key={deal.name} className="rounded-xl bg-muted/60 p-4">
+                <p className="text-xs text-muted-foreground">{deal.status}</p>
+                <h3 className="mt-1 text-base">{deal.name}</h3>
+                <div className="mt-3 flex items-end justify-between">
+                  <span className="text-xl font-bold text-foreground">{deal.price}</span>
+                  <span className="rounded-full bg-accent px-2 py-1 text-xs font-semibold text-primary">
                     {deal.save}
                   </span>
                 </div>
@@ -188,102 +164,57 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Testimonials */}
-        <section className="mb-14 grid gap-4 md:grid-cols-3">
-          <article className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
-            <p className="text-3xl font-serif leading-none text-slate-200">"</p>
-            <p className="mt-2 text-sm font-medium leading-relaxed text-slate-700">
-              Eindelijk geen dagelijkse checks meer!
-            </p>
-            <p className="mt-4 text-xs text-slate-400">Utrecht</p>
-          </article>
-          <article className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
-            <p className="text-3xl font-serif leading-none text-slate-200">"</p>
-            <p className="mt-2 text-sm font-medium leading-relaxed text-slate-700">
-              In 2 weken €280 bespaard op 3 items.
-            </p>
-            <p className="mt-4 text-xs text-slate-400">Groningen</p>
-          </article>
-          <article className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
-            <p className="text-3xl font-serif leading-none text-slate-200">"</p>
-            <p className="mt-2 text-sm font-medium leading-relaxed text-slate-700">
-              Sneller dan handmatig zoeken — altijd als eerste.
-            </p>
-            <p className="mt-4 text-xs text-slate-400">Eindhoven</p>
-          </article>
-        </section>
-
-        {/* FAQ */}
-        <section id="faq" className="mb-14">
-          <h2 className="mb-6 text-2xl font-bold text-slate-900">Veelgestelde vragen</h2>
-          <div className="space-y-2">
-            {[
-              {
-                q: "Hoe snel krijg ik notificaties?",
-                a: "Elke paar minuten checken we de voorraad — near real-time op basis van publieke IKEA updates.",
-              },
-              {
-                q: "Is deze tool verbonden met IKEA?",
-                a: "Nee. Volledig onafhankelijk, gebruikt alleen publieke IKEA data.",
-              },
-              {
-                q: "Kan ik meerdere winkels tegelijk volgen?",
-                a: "Ja. Je kunt combinaties maken van meerdere winkels en meerdere artikelen.",
-              },
-              {
-                q: "Is mijn e-mail veilig?",
-                a: "Ja. Geen spam — alleen alerts, en optioneel tips als je daar toestemming voor geeft.",
-              },
-              {
-                q: "Heb ik IKEA Family nodig?",
-                a: "Niet voor deze alerts. Voor sommige reserveringen in de IKEA-app zelf kan het nodig zijn.",
-              },
-            ].map(({ q, a }) => (
-              <details key={q} className="group rounded-xl bg-white px-5 py-4 shadow-sm ring-1 ring-slate-100">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold text-slate-900">
-                  {q}
-                  <span className="flex-shrink-0 text-lg font-light text-slate-400 transition-transform group-open:rotate-45">
-                    +
-                  </span>
-                </summary>
-                <p className="mt-3 text-sm leading-relaxed text-slate-500">{a}</p>
+        <section id="faq" className="mb-10 rounded-2xl bg-card p-5 shadow-sm">
+          <h2 className="text-3xl">Veelgestelde vragen</h2>
+          <div className="mt-4 space-y-2">
+            {faq.map((item) => (
+              <details key={item.q} className="rounded-xl border border-border bg-background px-4 py-3">
+                <summary className="cursor-pointer text-sm font-semibold">{item.q}</summary>
+                <p className="mt-2 text-sm text-muted-foreground">{item.a}</p>
               </details>
             ))}
           </div>
         </section>
 
-        {/* Footer */}
-        <footer className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
+        <section className="mb-10 rounded-2xl bg-primary p-6 text-primary-foreground shadow-sm">
+          <h2 className="text-3xl text-primary-foreground">Maak je huis voordeliger en circulairer</h2>
+          <p className="mt-3 max-w-3xl text-sm text-primary-foreground/90 md:text-base">
+            Start vandaag met alerts voor jouw IKEA producten. Onafhankelijk, snel en gemaakt voor Nederlandse winkels.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Button asChild variant="secondary">
+              <Link href="#watch-alerts">Start mijn tweede kans alert</Link>
+            </Button>
+            <Button asChild variant="outline" className="border-primary-foreground/60 bg-transparent text-primary-foreground hover:bg-primary-foreground/10">
+              <Link href="/contact">Stel een vraag</Link>
+            </Button>
+          </div>
+        </section>
+
+        <footer className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <div className="grid gap-8 md:grid-cols-4">
             <div className="md:col-span-2">
-              <div className="flex items-center gap-2">
-                <BellRing className="h-4 w-4 text-emerald-500" />
-                <span className="font-semibold text-slate-900">IKEA Tweede Kans Alerts</span>
-              </div>
-              <p className="mt-3 max-w-xs text-sm leading-relaxed text-slate-500">
-                Onafhankelijk van IKEA. Gebruikt alleen publieke data. Geen spam. GDPR-proof.
+              <p className="text-base font-semibold">Tweede Kans Slim &amp; Circulair</p>
+              <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+                Onafhankelijk van IKEA. Publieke data. Gericht op slim en duurzaam kopen.
               </p>
-              <p className="mt-3 text-xs text-slate-400">Gemaakt in Nederland 🇳🇱</p>
             </div>
             <div>
-              <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-400">
-                Navigatie
-              </h3>
-              <ul className="space-y-2 text-sm text-slate-500">
-                <li><Link href="/" className="hover:text-slate-900 transition-colors">Home</Link></li>
-                <li><Link href="#hoe-het-werkt" className="hover:text-slate-900 transition-colors">Hoe het werkt</Link></li>
-                <li><Link href="#faq" className="hover:text-slate-900 transition-colors">FAQ</Link></li>
-                <li><Link href="/contact" className="hover:text-slate-900 transition-colors">Contact</Link></li>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Navigatie</p>
+              <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                <li><Link href="/">Home</Link></li>
+                <li><Link href="/manage">Mijn alerts</Link></li>
+                <li><Link href="/account">Account</Link></li>
+                <li><Link href="/contact">Contact</Link></li>
               </ul>
             </div>
             <div>
-              <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-400">
-                Legal
-              </h3>
-              <ul className="space-y-2 text-sm text-slate-500">
-                <li><Link href="/privacy" className="hover:text-slate-900 transition-colors">Privacy</Link></li>
-                <li><Link href="/disclaimer" className="hover:text-slate-900 transition-colors">Disclaimer</Link></li>
-                <li><Link href="/manage" className="hover:text-slate-900 transition-colors">Mijn alerts</Link></li>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Informatie</p>
+              <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                <li><Link href="/guide-to-ikea-tweede-kans">Guide</Link></li>
+                <li><Link href="/ikea-tweede-kans-faq">FAQ</Link></li>
+                <li><Link href="/privacy">Privacy</Link></li>
+                <li><Link href="/disclaimer">Disclaimer</Link></li>
               </ul>
             </div>
           </div>

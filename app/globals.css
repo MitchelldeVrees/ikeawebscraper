@@ -4,31 +4,31 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #f8fafc;
-  --foreground: #1f2937;
+  --background: #f7f5ef;
+  --foreground: #2c2b27;
   --card: #ffffff;
-  --card-foreground: #1f2937;
+  --card-foreground: #2c2b27;
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: #22c55e;
+  --popover-foreground: #2c2b27;
+  --primary: #2e6b3e;
   --primary-foreground: #ffffff;
-  --secondary: #1e40af;
-  --secondary-foreground: #ffffff;
-  --muted: #eef2ff;
-  --muted-foreground: #475569;
-  --accent: #ffcc00;
-  --accent-foreground: #1f2937;
+  --secondary: #f4e5c8;
+  --secondary-foreground: #2c2b27;
+  --muted: #efece4;
+  --muted-foreground: #57534e;
+  --accent: #dcefd8;
+  --accent-foreground: #2c2b27;
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: #dbe4f0;
-  --input: #dbe4f0;
+  --border: #e6e0d2;
+  --input: #ded7c8;
   --ring: oklch(0.708 0 0);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
+  --radius: 0.75rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -40,25 +40,25 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
+  --background: #181713;
+  --foreground: #f2eee5;
+  --card: #22201a;
+  --card-foreground: #f2eee5;
+  --popover: #22201a;
+  --popover-foreground: #f2eee5;
+  --primary: #78aa85;
+  --primary-foreground: #12110d;
+  --secondary: #3c3428;
+  --secondary-foreground: #f2eee5;
+  --muted: #2d2921;
+  --muted-foreground: #cbc2b1;
+  --accent: #2f5d3a;
+  --accent-foreground: #edf8ef;
+  --destructive: #a3524f;
+  --destructive-foreground: #f8e9e8;
+  --border: #40382d;
+  --input: #40382d;
+  --ring: #7aa989;
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -75,7 +75,8 @@
 }
 
 @theme inline {
-  --font-sans: 'Geist', 'Geist Fallback';
+  --font-sans: var(--font-outfit), 'Segoe UI', sans-serif;
+  --font-display: var(--font-fraunces), Georgia, serif;
   --font-mono: 'Geist Mono', 'Geist Mono Fallback';
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -124,6 +125,15 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-image:
+      radial-gradient(circle at 0% 0%, rgba(46, 107, 62, 0.1), transparent 34%),
+      radial-gradient(circle at 100% 0%, rgba(244, 229, 200, 0.6), transparent 36%);
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
   }
   button {
     transform: translateY(0);

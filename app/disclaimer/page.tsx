@@ -66,7 +66,7 @@ export default function DisclaimerPage() {
 
           <p className="text-sm text-muted-foreground">
             Vragen over deze disclaimer?{" "}
-            <Link href="/contact" className="text-emerald-600 underline hover:text-emerald-700">
+            <Link href="/contact" className="text-primary underline hover:opacity-80">
               Neem contact op
             </Link>
             .

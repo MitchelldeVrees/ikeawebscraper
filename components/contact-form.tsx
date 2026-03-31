@@ -32,6 +32,11 @@ export function ContactForm() {
       return;
     }
 
+    if (!email) {
+      setError("Vul je e-mailadres in.");
+      return;
+    }
+
     if (message.length < 10) {
       setError("Je bericht moet minimaal 10 tekens bevatten.");
       return;
@@ -42,8 +47,8 @@ export function ContactForm() {
       return;
     }
 
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError("Voer een geldig e-mailadres in of laat het veld leeg.");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Voer een geldig e-mailadres in.");
       return;
     }
 
@@ -112,9 +117,7 @@ export function ContactForm() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">
-                E-mail <span className="text-muted-foreground">(optioneel)</span>
-              </Label>
+              <Label htmlFor="email">E-mail *</Label>
               <Input
                 id="email"
                 name="email"
@@ -124,6 +127,7 @@ export function ContactForm() {
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, email: e.target.value }))
                 }
+                required
               />
             </div>
           </div>
@@ -172,19 +176,19 @@ export function ContactForm() {
 
       <div
         className={cn(
-          "pointer-events-none absolute inset-0 flex items-center justify-center bg-emerald-50/60 opacity-0 backdrop-blur-sm transition-all duration-500 ease-out transform translate-y-3 scale-[0.98]",
+          "pointer-events-none absolute inset-0 flex items-center justify-center bg-accent/60 opacity-0 backdrop-blur-sm transition-all duration-500 ease-out transform translate-y-3 scale-[0.98]",
           showSuccess && "pointer-events-auto opacity-100 translate-y-0 scale-100"
         )}
         aria-live="polite"
       >
-        <div className="w-full max-w-md rounded-xl border border-emerald-200 bg-white/90 px-6 py-5 text-emerald-900 shadow-xl ring-2 ring-emerald-200/70 transition-all duration-500 ease-out">
+        <div className="w-full max-w-md rounded-xl border border-primary/30 bg-card/90 px-6 py-5 text-foreground shadow-xl ring-2 ring-primary/20 transition-all duration-500 ease-out">
           <div className="flex items-start gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 shadow-md">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent text-primary shadow-md">
               <CheckCircle2 className="h-6 w-6" />
             </div>
             <div className="space-y-2">
               <h3 className="text-lg font-semibold">Bericht verzonden!</h3>
-              <p className="text-sm text-emerald-800">
+              <p className="text-sm text-muted-foreground">
                 We hebben je bericht ontvangen en sturen het direct door naar ons
                 team. Je krijgt snel een reactie.
               </p>

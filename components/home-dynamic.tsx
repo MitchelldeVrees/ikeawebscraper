@@ -46,8 +46,6 @@ function AnimatedCounter({ target, suffix = "" }: { target: number; suffix?: str
 
 export function HomeDynamic() {
   const [showFloating, setShowFloating] = useState(false);
-  const [showDemoAlert, setShowDemoAlert] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const onScroll = () => {
@@ -59,14 +57,6 @@ export function HomeDynamic() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-
   const counters = useMemo(
     () => [
       { label: "alerts verstuurd deze maand", value: 1247 },
@@ -76,21 +66,13 @@ export function HomeDynamic() {
     []
   );
 
-  const runDemo = () => {
-    setShowDemoAlert(true);
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    timeoutRef.current = setTimeout(() => setShowDemoAlert(false), 3000);
-  };
-
   return (
     <>
-      <div className="rounded-2xl bg-white px-6 py-5 shadow-sm ring-1 ring-slate-100">
-        <div className="grid gap-6 sm:grid-cols-3 sm:divide-x sm:divide-slate-100">
+      <div className="rounded-2xl bg-card px-6 py-5 shadow-sm ring-1 ring-border">
+        <div className="grid gap-6 sm:grid-cols-3 sm:divide-x sm:divide-border">
           {counters.map((counter) => (
-            <p key={counter.label} className="text-sm text-slate-500 sm:px-6 first:pl-0 last:pr-0">
-              <span className="block text-2xl font-bold text-slate-900">
+            <p key={counter.label} className="text-sm text-muted-foreground sm:px-6 first:pl-0 last:pr-0">
+              <span className="block text-2xl font-bold text-foreground">
                 <AnimatedCounter target={counter.value} suffix={counter.suffix} />
               </span>
               {counter.label}
@@ -100,24 +82,10 @@ export function HomeDynamic() {
       </div>
 
       <div className="fixed bottom-4 right-4 z-50">
-        {showDemoAlert && (
-          <div className="mb-3 max-w-xs rounded-xl border border-emerald-300 bg-white p-3 shadow-lg">
-            <p className="text-xs text-slate-500">Live demo alert</p>
-            <p className="font-semibold text-slate-900">Nu in Eindhoven: IDASEN bureau voor €199.</p>
-          </div>
-        )}
-        <button
-          type="button"
-          onClick={runDemo}
-          className="mb-2 hidden rounded-xl border border-blue-300 bg-white px-4 py-2 text-sm font-semibold text-blue-900 shadow-sm hover:bg-blue-50 md:inline-flex"
-        >
-          Live demo
-        </button>
-
         {showFloating && (
           <Link
             href="#watch-alerts"
-            className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-emerald-600 md:hidden"
+            className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-lg transition hover:bg-primary/90 md:hidden"
           >
             <BellRing className="h-4 w-4" />
             Start gratis
