@@ -203,16 +203,15 @@ export default function Home() {
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Navigatie</p>
               <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
                 <li><Link href="/">Home</Link></li>
-                <li><Link href="/manage">Mijn alerts</Link></li>
-                <li><Link href="/account">Account</Link></li>
-                <li><Link href="/contact">Contact</Link></li>
+                <li><Link href="/#hoe-het-werkt">Hoe het werkt</Link></li>
+                <li><Link href="/ikea-tweede-kans-faq">FAQ</Link></li>
+                <li><Link href="/guide-to-ikea-tweede-kans">Guide</Link></li>
               </ul>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Informatie</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Contact & Legal</p>
               <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/guide-to-ikea-tweede-kans">Guide</Link></li>
-                <li><Link href="/ikea-tweede-kans-faq">FAQ</Link></li>
+                <li><Link href="/contact">Contact</Link></li>
                 <li><Link href="/privacy">Privacy</Link></li>
                 <li><Link href="/disclaimer">Disclaimer</Link></li>
               </ul>
