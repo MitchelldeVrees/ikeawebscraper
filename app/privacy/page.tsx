@@ -2,8 +2,15 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 
 export const metadata = {
-  title: "Privacybeleid | IKEA Tweede Kans Alerts",
-  description: "Lees hoe IKEA Tweede Kans Alerts omgaat met jouw persoonsgegevens.",
+  title: "Privacybeleid | Tweede Kans Slim & Circulair",
+  description: "Lees hoe Tweede Kans Slim & Circulair omgaat met jouw persoonsgegevens.",
+  alternates: {
+    canonical: "/privacy",
+    languages: {
+      "nl-NL": "/privacy",
+      "x-default": "/privacy",
+    },
+  },
 };
 
 export default function PrivacyPage() {

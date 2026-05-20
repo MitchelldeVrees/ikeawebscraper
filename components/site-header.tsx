@@ -11,7 +11,7 @@ const publicNavItems = [
   { href: "/", label: "Home" },
   { href: "/#hoe-het-werkt", label: "Hoe het werkt" },
   { href: "/ikea-tweede-kans-faq", label: "FAQ" },
-  { href: "/guide-to-ikea-tweede-kans", label: "Guide" },
+  { href: "/alles-over-ikea-tweede-kans", label: "Gids" },
 ];
 
 const authenticatedNavItems = [

@@ -5,9 +5,13 @@ import { SiteHeader } from "@/components/site-header";
 export const metadata = {
   title: "Alles over IKEA Tweede Kans | De Ultieme Gids voor de Tweedekanshoek",
   description:
-    "Alles wat je moet weten over de IKEA Tweedekanshoek in Nederland: hoe het werkt, welke producten je vindt, tips om deals te scoren en hoe je alerts instelt.",
+    "Alles wat je moet weten over de IKEA Tweedekanshoek in Nederland: hoe het werkt, welke producten je vindt, tips om aanbiedingen te scoren en hoe je alerts instelt.",
   alternates: {
-    canonical: "https://ikeatweedekans.com/alles-over-ikea-tweede-kans",
+    canonical: "/alles-over-ikea-tweede-kans",
+    languages: {
+      "nl-NL": "/alles-over-ikea-tweede-kans",
+      "x-default": "/alles-over-ikea-tweede-kans",
+    },
   },
 };
 
@@ -17,34 +21,49 @@ const articleSchema = {
   headline:
     "Alles over IKEA Tweede Kans - De Ultieme Gids voor de Tweedekanshoek in Nederland",
   description:
-    "Complete gids over de IKEA Tweedekanshoek: hoe het werkt, welke producten je vindt, tips voor de beste deals, en hoe alerts je helpen geen koopje te missen.",
+    "Complete gids over de IKEA Tweedekanshoek: hoe het werkt, welke producten je vindt, tips voor de beste aanbiedingen, en hoe alerts je helpen geen koopje te missen.",
   author: {
     "@type": "Organization",
-    name: "IKEA Tweede Kans Alerts",
+    name: "Tweede Kans Slim & Circulair",
     url: "https://ikeatweedekans.com",
   },
   publisher: {
     "@type": "Organization",
-    name: "IKEA Tweede Kans Alerts",
+    name: "Tweede Kans Slim & Circulair",
   },
   mainEntityOfPage: "https://ikeatweedekans.com/alles-over-ikea-tweede-kans",
   inLanguage: "nl",
 };
 
 const storeRows = [
-  ["IKEA Amsterdam", "Noord-Holland", "Ja"],
-  ["IKEA Amersfoort", "Utrecht", "Ja"],
-  ["IKEA Barendrecht (Rotterdam)", "Zuid-Holland", "Ja"],
-  ["IKEA Breda", "Noord-Brabant", "Ja"],
-  ["IKEA Delft", "Zuid-Holland", "Ja"],
-  ["IKEA Duiven", "Gelderland", "Ja"],
-  ["IKEA Eindhoven", "Noord-Brabant", "Ja"],
-  ["IKEA Groningen", "Groningen", "Ja"],
-  ["IKEA Haarlem", "Noord-Holland", "Ja"],
-  ["IKEA Heerlen", "Limburg", "Ja"],
-  ["IKEA Hengelo", "Overijssel", "Ja"],
-  ["IKEA Utrecht", "Utrecht", "Ja"],
-  ["IKEA Zwolle", "Overijssel", "Ja"],
+  {
+    name: "IKEA Amsterdam",
+    province: "Noord-Holland",
+    online: "Ja",
+    localPagePath: "/ikea-tweede-kans-amsterdam",
+  },
+  { name: "IKEA Amersfoort", province: "Utrecht", online: "Ja" },
+  { name: "IKEA Barendrecht (Rotterdam)", province: "Zuid-Holland", online: "Ja" },
+  { name: "IKEA Breda", province: "Noord-Brabant", online: "Ja" },
+  {
+    name: "IKEA Delft",
+    province: "Zuid-Holland",
+    online: "Ja",
+    localPagePath: "/ikea-tweede-kans-delft",
+  },
+  { name: "IKEA Duiven", province: "Gelderland", online: "Ja" },
+  { name: "IKEA Eindhoven", province: "Noord-Brabant", online: "Ja" },
+  { name: "IKEA Groningen", province: "Groningen", online: "Ja" },
+  {
+    name: "IKEA Haarlem",
+    province: "Noord-Holland",
+    online: "Ja",
+    localPagePath: "/ikea-tweede-kans-haarlem",
+  },
+  { name: "IKEA Heerlen", province: "Limburg", online: "Ja" },
+  { name: "IKEA Hengelo", province: "Overijssel", online: "Ja" },
+  { name: "IKEA Utrecht", province: "Utrecht", online: "Ja" },
+  { name: "IKEA Zwolle", province: "Overijssel", online: "Ja" },
 ];
 
 export default function GuidePage() {
@@ -71,6 +90,13 @@ export default function GuidePage() {
               werkt, waar je de beste deals vindt, en hoe je nooit meer een
               koopje mist.
             </p>
+            <p className="mt-3 text-sm text-primary-foreground/90">
+              Meer vragen?{" "}
+              <Link href="/ikea-tweede-kans-faq" className="underline">
+                Bekijk ook de FAQ
+              </Link>
+              .
+            </p>
           </header>
 
           <nav className="rounded-2xl border border-border bg-card p-5 shadow-sm" aria-label="Inhoudsopgave">
@@ -83,7 +109,12 @@ export default function GuidePage() {
               <li><a className="text-primary underline" href="#garantie">Garantie en retourbeleid</a></li>
               <li><a className="text-primary underline" href="#terugkoop">De IKEA terugkoopservice</a></li>
               <li><a className="text-primary underline" href="#tips">8 tips om betere deals te scoren</a></li>
-              <li><a className="text-primary underline" href="#alerts">Nooit meer een deal missen met alerts</a></li>
+              <li>
+                Nooit meer een deal missen met{" "}
+                <Link className="text-primary underline" href="/#watch-alerts">
+                  alerts
+                </Link>
+              </li>
               <li><a className="text-primary underline" href="#faq">Veelgestelde vragen</a></li>
             </ol>
           </nav>
@@ -166,10 +197,18 @@ export default function GuidePage() {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {storeRows.map((row) => (
-                    <tr key={row[0]}>
-                      <td className="px-4 py-3 font-medium">{row[0]}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{row[1]}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{row[2]}</td>
+                    <tr key={row.name}>
+                      <td className="px-4 py-3 font-medium">
+                        {row.localPagePath ? (
+                          <Link href={row.localPagePath} className="text-primary underline">
+                            {row.name}
+                          </Link>
+                        ) : (
+                          row.name
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">{row.province}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{row.online}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -216,7 +255,13 @@ export default function GuidePage() {
           <section id="tips" className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <h2 className="text-3xl">8 tips om de beste deals te scoren</h2>
             <ol className="mt-4 list-decimal space-y-2 pl-5 text-muted-foreground">
-              <li>Stel alerts in per artikelnummer.</li>
+              <li>
+                Stel{" "}
+                <Link href="/#watch-alerts" className="text-primary underline">
+                  alerts
+                </Link>{" "}
+                in per artikelnummer.
+              </li>
               <li>Volg meerdere vestigingen tegelijk.</li>
               <li>Ga op rustige momenten, vaak doordeweeks in de ochtend.</li>
               <li>Word IKEA Family lid voor online toegang.</li>
@@ -230,7 +275,11 @@ export default function GuidePage() {
           <section id="alerts" className="rounded-2xl bg-primary px-6 py-8 text-primary-foreground shadow-sm">
             <h2 className="text-3xl text-primary-foreground">Nooit meer een deal missen?</h2>
             <p className="mt-3 max-w-3xl text-primary-foreground/90">
-              Het aanbod verandert snel. Met IKEA Tweede Kans Alerts stel je per
+              Het aanbod verandert snel. Met{" "}
+              <Link href="/#watch-alerts" className="underline">
+                alerts
+              </Link>{" "}
+              van Tweede Kans Slim &amp; Circulair stel je per
               artikel en vestiging je voorkeuren in en krijg je direct een mail
               bij een match.
             </p>
@@ -262,7 +311,13 @@ export default function GuidePage() {
               </div>
               <div>
                 <h3 className="text-xl">Hoe vaak ververst het aanbod?</h3>
-                <p className="mt-1 text-muted-foreground">Dagelijks, soms meerdere keren per dag. Daarom werken alerts het best.</p>
+                <p className="mt-1 text-muted-foreground">
+                  Dagelijks, soms meerdere keren per dag. Daarom werken{" "}
+                  <Link href="/#watch-alerts" className="text-primary underline">
+                    alerts
+                  </Link>{" "}
+                  het best.
+                </p>
               </div>
             </div>
           </section>
@@ -270,7 +325,7 @@ export default function GuidePage() {
           <footer className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground shadow-sm">
             <p><strong className="text-foreground">Over deze gids:</strong> bijgewerkt in maart 2026.</p>
             <p className="mt-2">
-              IKEA Tweede Kans Alerts is een onafhankelijke tool en niet gelieerd
+              Tweede Kans Slim &amp; Circulair is een onafhankelijke tool en niet gelieerd
               aan IKEA of Ingka Group.
             </p>
             <p className="mt-4">

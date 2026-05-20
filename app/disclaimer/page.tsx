@@ -2,8 +2,15 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 
 export const metadata = {
-  title: "Disclaimer | IKEA Tweede Kans Alerts",
-  description: "Disclaimer voor het gebruik van IKEA Tweede Kans Alerts.",
+  title: "Disclaimer | Tweede Kans Slim & Circulair",
+  description: "Disclaimer voor het gebruik van Tweede Kans Slim & Circulair.",
+  alternates: {
+    canonical: "/disclaimer",
+    languages: {
+      "nl-NL": "/disclaimer",
+      "x-default": "/disclaimer",
+    },
+  },
 };
 
 export default function DisclaimerPage() {
@@ -29,7 +36,7 @@ export default function DisclaimerPage() {
             <div>
               <h2 className="mb-2 text-lg font-semibold">Onafhankelijke tool</h2>
               <p className="text-sm text-muted-foreground">
-                IKEA Tweede Kans Alerts is een onafhankelijke dienst en is op geen enkele wijze gelieerd aan,
+                Tweede Kans Slim & Circulair is een onafhankelijke dienst en is op geen enkele wijze gelieerd aan,
                 gesponsord door of goedgekeurd door IKEA. Alle productnamen, logo's en merken zijn eigendom
                 van hun respectievelijke eigenaren.
               </p>

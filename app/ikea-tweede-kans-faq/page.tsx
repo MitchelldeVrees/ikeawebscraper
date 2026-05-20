@@ -1,76 +1,107 @@
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/site-header";
 
 export const metadata = {
-  title: "IKEA Tweede Kans FAQ Nederland | Alerts & Tips voor Tweedekanshoek",
+  title: "IKEA Tweede Kans FAQ | Korte Antwoorden",
   description:
-    "Antwoorden op veelgestelde vragen over IKEA Tweede Kans in Nederland. Leer over alerts, hoe de Tweedekanshoek werkt, garanties, online kopen en meer voor tweedehands IKEA deals.",
+    "Korte antwoorden op veelgestelde vragen over IKEA Tweede Kans. Voor uitgebreide uitleg verwijzen we naar de complete gids.",
+  alternates: {
+    canonical: "/ikea-tweede-kans-faq",
+    languages: {
+      "nl-NL": "/ikea-tweede-kans-faq",
+      "x-default": "/ikea-tweede-kans-faq",
+    },
+  },
 };
 
-const faqEntries = [
+type FaqEntry = {
+  question: string;
+  answer: string;
+  guideHref: string;
+};
+
+const GUIDE_PATH = "/alles-over-ikea-tweede-kans";
+
+const faqEntries: FaqEntry[] = [
   {
     question: "Wat is IKEA Tweede Kans?",
     answer:
-      "IKEA Tweede Kans, ook bekend als de Tweedekanshoek, is een speciale afdeling in IKEA winkels waar producten een tweede leven krijgen. Dit omvat showmodellen, herverpakte producten, uitgaand assortiment en items met een kleine beschadiging. Bij ieder product staat de prijs, productinformatie en reden voor herverkoop vermeld. Het assortiment wisselt voortdurend en ondersteunt duurzaamheid door afval te verminderen.",
+      "De Tweedekanshoek is IKEA's outlet voor showmodellen, retouren en producten met lichte schade tegen korting.",
+    guideHref: `${GUIDE_PATH}#wat-is`,
   },
   {
-    question: "Welke producten zijn beschikbaar in de IKEA Tweede Kans?",
+    question: "Welke producten vind ik daar?",
     answer:
-      "In de Tweedekanshoek vind je een verscheidenheid aan producten, zoals meubels (bijv. boekenkasten, bedden, stoelen), accessoires, keukenartikelen en verlichting. Dit zijn vaak showmodellen, herverpakte items, uitlopende producten of licht beschadigde artikelen die tegen gereduceerde prijzen worden verkocht, soms tot 50% korting of meer.",
+      "Meestal meubels, opbergers, stoelen, verlichting en accessoires. Het aanbod wisselt de hele dag.",
+    guideHref: `${GUIDE_PATH}#producten`,
   },
   {
-    question: "Wat zijn de garanties op IKEA Tweede Kans producten?",
+    question: "Hoe werkt online reserveren?",
     answer:
-      "Op aankopen uit de Tweedekanshoek geldt een standaard garantietermijn van 2 jaar, maar alleen op de functionaliteit. De garantie vervalt op de reden waarom het artikel in de Tweedekanshoek staat (vermeld op de sticker). Matrassen hebben geen 90-dagen omruilgarantie. Voor beschadigde producten is de gele sticker leidend.",
+      "Je reserveert via IKEA Family, kiest een tijdslot en rekent af in de winkel bij ophalen.",
+    guideHref: `${GUIDE_PATH}#hoe-werkt`,
   },
   {
-    question: "Kan ik IKEA Tweede Kans producten retourneren of ruilen?",
+    question: "In welke winkels is Tweede Kans beschikbaar?",
     answer:
-      "Ja, producten uit de Tweedekanshoek kunnen worden geruild of geretourneerd, net als reguliere aankopen. Als iets niet past zoals gedacht, kun je het binnen de standaard retourperiode terugbrengen naar de winkel.",
+      "In alle grote IKEA vestigingen in Nederland. Per winkel verschilt de voorraad.",
+    guideHref: `${GUIDE_PATH}#vestigingen`,
   },
   {
-    question: "Hoe kan ik IKEA Tweede Kans producten online kopen?",
+    question: "Krijg ik garantie op Tweede Kans producten?",
     answer:
-      "IKEA Family-leden kunnen Tweedekanshoek-producten online reserveren via de IKEA website. Kies een vestiging, gebruik de reserveringsknop en bevestig via je account. Je ontvangt een e-mail met tijdsloten voor ophalen. Betaling gebeurt alleen via pin in de winkel. Niet alle winkels bieden online aanbod.",
+      "Ja, op functionaliteit. Schade die expliciet op de sticker staat valt daar niet onder.",
+    guideHref: `${GUIDE_PATH}#garantie`,
   },
   {
-    question: "Is er transport beschikbaar voor Tweede Kans producten?",
+    question: "Mag ik retouren doen?",
     answer:
-      "Nee, voor producten uit de Tweedekanshoek mag je geen transportservice boeken. Sommige items worden gemonteerd verkocht, maar je kunt gereedschap lenen om ze te demonteren met hulp van IKEA medewerkers. Overweeg het huren van een busje via IKEA's partner Hertz voor grote aankopen.",
+      "Ja, Tweede Kans valt onder het reguliere retourbeleid van IKEA, met de normale voorwaarden.",
+    guideHref: `${GUIDE_PATH}#garantie`,
   },
   {
-    question: "In welke IKEA winkels in Nederland is de Tweede Kans beschikbaar?",
+    question: "Kan ik bezorging boeken?",
     answer:
-      "De Tweedekanshoek is beschikbaar in alle IKEA vestigingen in Nederland, waaronder Amsterdam, Delft, Eindhoven, Groningen, Haarlem, Heerlen, Hengelo, Utrecht en Zwolle. Controleer lokale aanbiedingen en openingstijden op de IKEA website.",
+      "Meestal niet voor Tweedekanshoek-aankopen; vaak moet je zelf ophalen en vervoeren.",
+    guideHref: `${GUIDE_PATH}#faq`,
   },
   {
-    question: "Hoe snel ontvang ik notificaties via de alerts?",
+    question: "Hoe snel zijn alerts?",
     answer:
-      "Ons systeem controleert IKEA aanbiedingen elke paar minuten. Je ontvangt een e-mail zodra een matching artikel beschikbaar komt in een geselecteerde winkel. Dit is near real-time, maar hangt af van IKEA's updates.",
+      "Ons systeem controleert regelmatig en stuurt een e-mail zodra een match beschikbaar komt.",
+    guideHref: `${GUIDE_PATH}#alerts`,
   },
   {
-    question: "Is deze tool affiliated met IKEA of de Tweedekansje team?",
+    question: "Is deze tool officieel van IKEA?",
     answer:
-      "Nee, dit is een onafhankelijke tool. We gebruiken publiek beschikbare data van IKEA's Tweedekanshoek om alerts te bieden en samenvattingen te geven.",
+      "Nee, dit is een onafhankelijke dienst op basis van publiek beschikbare data.",
+    guideHref: `${GUIDE_PATH}#faq`,
   },
   {
-    question: "Kan ik meerdere winkels of artikelen tracken?",
+    question: "Kan ik meerdere winkels tegelijk volgen?",
     answer:
-      "Ja, je kunt alerts instellen voor meerdere artikel nummers en elke combinatie van IKEA winkels in Nederland kiezen. Dit helpt om deals sneller te vinden zonder dagelijks te checken.",
-  },
-  {
-    question: "Waarom verkoopt IKEA tweedehands meubels?",
-    answer:
-      "IKEA verkoopt tweedehands meubels om duurzaamheid te bevorderen en afval te verminderen. Via de Terugkoopservice kopen ze gebruikte IKEA producten terug om ze een tweede leven te geven. Het doel is om circulair te worden tegen 2030, met producten die hergebruikt, gerepareerd of gerecycled kunnen worden.",
-  },
-  {
-    question: "Hoe draagt IKEA Tweede Kans bij aan duurzaamheid?",
-    answer:
-      "Door producten een tweede kans te geven, voorkomt IKEA dat miljoenen meubels wereldwijd bij het afval belanden. Het moedigt hergebruik aan, biedt reserveonderdelen voor reparaties en inspireert tot betaalbare, duurzame woonoplossingen.",
+      "Ja, je kunt meerdere artikelnummers en meerdere vestigingen tegelijk monitoren.",
+    guideHref: `${GUIDE_PATH}#tips`,
   },
 ];
+
+function linkTweedekanshoek(text: string) {
+  return text.split(/(Tweedekanshoek)/gi).map((part, index) => {
+    if (/^Tweedekanshoek$/i.test(part)) {
+      return (
+        <Link
+          key={`${part}-${index}`}
+          href={GUIDE_PATH}
+          className="text-primary underline"
+        >
+          {part}
+        </Link>
+      );
+    }
+    return part;
+  });
+}
 
 export default function FAQPage() {
   const schema = {
@@ -94,51 +125,62 @@ export default function FAQPage() {
       />
       <div className="container mx-auto px-4 py-8 space-y-10">
         <SiteHeader />
+
         <section className="text-center">
           <p className="text-xs uppercase tracking-[0.4em] text-muted-foreground mb-2">
-            IKEA Tweede Kans FAQ Nederland
+            IKEA Tweede Kans FAQ
           </p>
           <h1 className="text-3xl md:text-4xl font-bold mb-4">
-            IKEA Tweede Kans FAQ
+            Korte antwoorden op veelgestelde vragen
           </h1>
           <p className="text-sm md:text-base text-muted-foreground mx-auto max-w-2xl">
-            Vind antwoorden op veelgestelde vragen over de IKEA Tweedekanshoek in Nederland. Leer hoe alerts werken, wat je kunt verwachten van tweedehands IKEA stock, garanties, online kopen en tips om deals te vinden.
+            {linkTweedekanshoek(
+              "Deze pagina is bewust kort en praktisch. Voor volledige uitleg ga je naar de uitgebreide gids."
+            )}
           </p>
-        </section>
-
-        <section className="grid gap-6 md:grid-cols-2">
-          {[
-            "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1472220625704-91e1462799b2?auto=format&fit=crop&w=800&q=80",
-          ].map((src, index) => (
-            <div key={src} className="relative h-48 overflow-hidden rounded-2xl border border-border">
-              <Image src={src} alt="IKEA Tweede Kans inspiratie Nederland" fill className="object-cover" />
-            </div>
-          ))}
+          <p className="mt-3 text-sm text-muted-foreground">
+            <Link href={GUIDE_PATH} className="text-primary underline">
+              Lees de complete gids
+            </Link>{" "}
+            voor uitgebreide context, voorbeelden en store-overzichten.
+          </p>
         </section>
 
         <section className="space-y-4">
           {faqEntries.map((entry) => (
             <article key={entry.question} className="rounded-2xl border border-border p-4">
               <h2 className="text-lg font-semibold mb-2">{entry.question}</h2>
-              <p className="text-sm text-muted-foreground">{entry.answer}</p>
+              <p className="text-sm text-muted-foreground">
+                {linkTweedekanshoek(entry.answer)}
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Meer details:{" "}
+                <Link href={entry.guideHref} className="text-primary underline">
+                  naar relevante sectie in de gids
+                </Link>
+              </p>
             </article>
           ))}
         </section>
 
         <section className="rounded-2xl border border-border p-6 bg-gradient-to-br from-primary/10 to-transparent space-y-4">
-          <h2 className="text-2xl font-semibold">Wil je alerts in plaats van handmatig zoeken?</h2>
+          <h2 className="text-2xl font-semibold">Snel naar actie</h2>
           <p className="text-sm text-muted-foreground">
-            Stel in seconden een watch in om notificaties te krijgen wanneer de items die je wilt in de IKEA Tweede Kans stock verschijnen in Nederland.
+            Wil je niet handmatig blijven checken? Stel direct alerts in of lees eerst de complete gids.
           </p>
-          <Button asChild size="lg">
-            <Link href="/#watch-alerts">Stel Nu Alerts In</Link>
-          </Button>
+          <div className="flex flex-wrap gap-3">
+            <Button asChild size="lg">
+              <Link href="/#watch-alerts">Stel Nu Alerts In</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link href={GUIDE_PATH}>Lees de complete gids</Link>
+            </Button>
+          </div>
         </section>
 
         <footer className="text-sm text-muted-foreground border-t border-border pt-4 space-y-2">
           <p>Dit is een onafhankelijke tool en is niet gelieerd aan IKEA.</p>
-          <p>FAQ content is gebaseerd op publiek beschikbare informatie van IKEA Nederland.</p>
+          <p>Voor uitgebreide inhoud en achtergrond: bekijk de gids.</p>
         </footer>
       </div>
     </main>

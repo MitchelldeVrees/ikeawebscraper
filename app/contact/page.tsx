@@ -7,6 +7,13 @@ export const metadata = {
   title: "Contact",
   description:
     "Stel je vraag of deel een idee voor de IKEA Tweede Kans alerts. We lezen elke reactie.",
+  alternates: {
+    canonical: "/contact",
+    languages: {
+      "nl-NL": "/contact",
+      "x-default": "/contact",
+    },
+  },
 };
 
 export default function ContactPage() {

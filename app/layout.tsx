@@ -1,78 +1,81 @@
-import type { Metadata } from 'next'
-import { Fraunces, Outfit } from 'next/font/google'
+import type { Metadata } from "next";
+import { Fraunces, Outfit } from "next/font/google";
+import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
 
-import { AuthProvider } from '@/components/providers/auth-provider'
-import { ThemeProvider } from '@/components/theme-provider'
-import './globals.css'
-import { Analytics } from '@vercel/analytics/next'
-import Script from 'next/script'
+import { AuthProvider } from "@/components/providers/auth-provider";
+import { ThemeProvider } from "@/components/theme-provider";
+import "./globals.css";
 
-const baseUrl = 'https://ikeatweedekans.com/'
-const GA_TRACKING_ID = process.env.NEXT_PUBLIC_GA_TRACKING_ID
-const HOTJAR_ID = process.env.NEXT_PUBLIC_HOTJAR_ID
-const ENABLE_ANALYTICS = process.env.NEXT_PUBLIC_ENABLE_ANALYTICS === 'true'
+const baseUrl = "https://ikeatweedekans.com";
+const GA_TRACKING_ID = process.env.NEXT_PUBLIC_GA_TRACKING_ID;
+const HOTJAR_ID = process.env.NEXT_PUBLIC_HOTJAR_ID;
+const ENABLE_ANALYTICS = process.env.NEXT_PUBLIC_ENABLE_ANALYTICS === "true";
 
 const fraunces = Fraunces({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-fraunces',
-})
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-fraunces",
+});
 
 const outfit = Outfit({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-outfit',
-})
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-outfit",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: 'IKEA Tweede Kans Alerts – Realtime email als jouw product in de uitverkoop gaat',
-    template: '%s | IKEA Tweede Kans Alerts',
+    default: "Tweede Kans Slim & Circulair - Realtime email als jouw product in de uitverkoop gaat",
+    template: "%s | Tweede Kans Slim & Circulair",
   },
   description:
-    'Realtime e-mailalerts zodra jouw favoriete IKEA product in de Tweede Kanshoek verschijnt in Nederlandse winkels.',
-  generator: '',
+    "Realtime e-mailalerts zodra jouw favoriete IKEA product in de Tweede Kanshoek verschijnt in Nederlandse winkels.",
+  generator: "",
   keywords: [
-    'ikea tweedekans',
-    'ikea tweede kans',
-    'ikea clearance deals',
-    'ikea sale alerts',
+    "ikea tweedekans",
+    "ikea tweede kans",
+    "ikea tweede kanshoek",
+    "ikea kortingsmeubels",
+    "ikea voorraadalerts",
   ],
   authors: [
     {
-      name: 'IKEA Tweede kans',
+      name: "Tweede Kans Slim & Circulair",
       url: baseUrl,
     },
   ],
   openGraph: {
-    title: 'IKEA Tweede Kans Alerts',
+    title: "Tweede Kans Slim & Circulair",
     description:
-      'Realtime e-mailalerts voor IKEA Tweede Kans deals in Nederland.',
+      "Realtime e-mailalerts voor IKEA Tweede Kans aanbiedingen in Nederland.",
     url: baseUrl,
-    siteName: 'IKEA Tweede kans',
-    type: 'website',
+    siteName: "Tweede Kans Slim & Circulair",
+    locale: "nl_NL",
+    type: "website",
   },
   twitter: {
-    card: 'summary_large_image',
-    title: 'IKEA Tweede Kans Alerts',
+    card: "summary_large_image",
+    title: "Tweede Kans Slim & Circulair",
     description:
-      'Realtime e-mailalerts voor IKEA Tweede Kans deals in Nederland.',
-    site: '@IkeaTweedeKans',
+      "Realtime e-mailalerts voor IKEA Tweede Kans aanbiedingen in Nederland.",
+    site: "@IkeaTweedeKans",
   },
   icons: {
-    icon: '/ikeaTweedeKans.png',
-    apple: '/ikeaTweedeKans.png',
+    icon: "/ikeaTweedeKans.png",
+    apple: "/ikeaTweedeKans.png",
   },
   other: {
-    'robots': 'index,follow',
+    robots: "index,follow",
+    "content-language": "nl-NL",
   },
-}
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
     <html lang="nl" suppressHydrationWarning>
@@ -128,5 +131,5 @@ export default function RootLayout({
         </ThemeProvider>
       </body>
     </html>
-  )
+  );
 }

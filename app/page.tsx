@@ -1,11 +1,14 @@
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { ArrowRight, Leaf, Store, Timer } from "lucide-react";
 
 import { AuthCodeRedirect } from "@/components/auth-code-redirect";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
+import { fetchIkeaDeals } from "@/lib/ikea-api";
+import { IKEA_STORES } from "@/lib/ikea-stores";
 
 const WatchForm = dynamic(
   () => import("@/components/watch-form").then((mod) => mod.WatchForm),
@@ -22,12 +25,81 @@ const HomeDynamic = dynamic(
   () => import("@/components/home-dynamic").then((mod) => mod.HomeDynamic)
 );
 
-const deals = [
-  { name: "BILLY boekenkast", status: "Zojuist", price: "€49", save: "-41%" },
-  { name: "KALLAX vakkenkast", status: "4 min geleden", price: "€39", save: "-46%" },
-  { name: "POANG fauteuil", status: "8 min geleden", price: "€59", save: "-37%" },
-  { name: "IDASEN bureau", status: "12 min geleden", price: "€199", save: "-44%" },
-];
+export const metadata: Metadata = {
+  alternates: {
+    canonical: "/",
+    languages: {
+      "nl-NL": "/",
+      "x-default": "/",
+    },
+  },
+};
+
+export const revalidate = 300;
+
+type HomepageDeal = {
+  id: string;
+  name: string;
+  store: string;
+  priceNow: number;
+  savings: number;
+  discountPercent: number;
+};
+
+function formatCurrency(value: number) {
+  return value.toLocaleString("nl-NL", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 0,
+  });
+}
+
+async function getHomepageDeals(): Promise<HomepageDeal[]> {
+  const storeIds = ["088", "270", "087", "151"];
+
+  const byStore = await Promise.all(
+    storeIds.map(async (storeId) => {
+      try {
+        const products = await fetchIkeaDeals(storeId);
+        const storeName = IKEA_STORES[storeId]?.name ?? storeId;
+
+        return products
+          .map((product) => {
+            const originalPrice =
+              typeof product.originalPrice === "number"
+                ? product.originalPrice
+                : product.price;
+            const savings = originalPrice - product.price;
+
+            if (product.price <= 0 || originalPrice <= 0 || savings <= 1) {
+              return null;
+            }
+
+            return {
+              id: `${storeId}-${product.id}-${product.offerNumber ?? "offer"}`,
+              name: product.name,
+              store: storeName,
+              priceNow: product.price,
+              savings,
+              discountPercent: Math.max(
+                1,
+                Math.round((savings / originalPrice) * 100)
+              ),
+            } satisfies HomepageDeal;
+          })
+          .filter((deal): deal is HomepageDeal => deal !== null);
+      } catch (error) {
+        console.error(`[home] Failed to fetch deals for ${storeId}`, error);
+        return [];
+      }
+    })
+  );
+
+  return byStore
+    .flat()
+    .sort((a, b) => b.savings - a.savings)
+    .slice(0, 4);
+}
 
 const faq = [
   {
@@ -48,7 +120,9 @@ const faq = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const deals = await getHomepageDeals();
+
   return (
     <main className="min-h-screen bg-background text-foreground">
       <Suspense fallback={null}>
@@ -74,7 +148,7 @@ export default function Home() {
                 <Link href="#watch-alerts">Start duurzame alert</Link>
               </Button>
               <Button asChild size="lg" variant="secondary">
-                <Link href="/guide-to-ikea-tweede-kans">Bekijk deals guide</Link>
+                <Link href="/alles-over-ikea-tweede-kans">Bekijk dealgids</Link>
               </Button>
             </div>
             <div className="flex flex-wrap gap-5 border-t border-border pt-4 text-sm text-muted-foreground">
@@ -144,24 +218,40 @@ export default function Home() {
         <section className="mb-10 rounded-2xl bg-card p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between gap-3">
             <h2 className="text-3xl">Recent gealerteerde deals</h2>
-            <Link href="/guide-to-ikea-tweede-kans" className="inline-flex items-center gap-1 text-sm font-semibold text-primary">
-              Naar deal guide <ArrowRight className="h-4 w-4" />
+            <Link href="/alles-over-ikea-tweede-kans" className="inline-flex items-center gap-1 text-sm font-semibold text-primary">
+              Naar dealgids <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
-          <div className="grid gap-3 md:grid-cols-4">
-            {deals.map((deal) => (
-              <article key={deal.name} className="rounded-xl bg-muted/60 p-4">
-                <p className="text-xs text-muted-foreground">{deal.status}</p>
-                <h3 className="mt-1 text-base">{deal.name}</h3>
-                <div className="mt-3 flex items-end justify-between">
-                  <span className="text-xl font-bold text-foreground">{deal.price}</span>
-                  <span className="rounded-full bg-accent px-2 py-1 text-xs font-semibold text-primary">
-                    {deal.save}
-                  </span>
-                </div>
-              </article>
-            ))}
-          </div>
+
+          <p className="mb-4 text-sm text-muted-foreground">
+            Live gegevens uit de IKEA Tweede Kans API.
+          </p>
+
+          {deals.length === 0 ? (
+            <div className="rounded-xl border border-border bg-background p-4 text-sm text-muted-foreground">
+              Op dit moment zijn er geen live deals beschikbaar uit de IKEA API.
+            </div>
+          ) : (
+            <div className="grid gap-3 md:grid-cols-4">
+              {deals.map((deal) => (
+                <article key={deal.id} className="rounded-xl bg-muted/60 p-4">
+                  <p className="text-xs text-muted-foreground">Live bij IKEA {deal.store}</p>
+                  <h3 className="mt-1 text-base">{deal.name}</h3>
+                  <div className="mt-3 flex items-end justify-between">
+                    <span className="text-xl font-bold text-foreground">
+                      {formatCurrency(deal.priceNow)}
+                    </span>
+                    <span className="rounded-full bg-accent px-2 py-1 text-xs font-semibold text-primary">
+                      -{deal.discountPercent}%
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Besparing {formatCurrency(deal.savings)}
+                  </p>
+                </article>
+              ))}
+            </div>
+          )}
         </section>
 
         <section id="faq" className="mb-10 rounded-2xl bg-card p-5 shadow-sm">
@@ -205,7 +295,7 @@ export default function Home() {
                 <li><Link href="/">Home</Link></li>
                 <li><Link href="/#hoe-het-werkt">Hoe het werkt</Link></li>
                 <li><Link href="/ikea-tweede-kans-faq">FAQ</Link></li>
-                <li><Link href="/guide-to-ikea-tweede-kans">Guide</Link></li>
+                <li><Link href="/alles-over-ikea-tweede-kans">Gids</Link></li>
               </ul>
             </div>
             <div>

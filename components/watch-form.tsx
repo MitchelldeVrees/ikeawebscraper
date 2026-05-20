@@ -444,10 +444,13 @@ export function WatchForm() {
                   {articleValidationMessage}
                 </p>
                 {productPreview?.imageUrl && (
-                  <div className="mt-2 flex items-start gap-3">
+                    <div className="mt-2 flex items-start gap-3">
                       <Image
                         src={productPreview.imageUrl}
-                        alt={productPreview.name ?? "Productvoorbeeld"}
+                        alt={
+                          productPreview.name ??
+                          `IKEA productvoorbeeld voor artikel ${articleNumber || "onbekend"}`
+                        }
                       width={96}
                       height={96}
                       className="h-16 w-16 rounded border object-cover"
@@ -515,7 +518,11 @@ export function WatchForm() {
                               ? "/artikelnummerMobiel.png"
                               : "/artikelnummerdesktop.png"
                           }
-                          alt="Voorbeeld van een IKEA artikelnummer op de productpagina"
+                          alt={
+                            isMobileDevice
+                              ? "Mobiele IKEA productpagina met gemarkeerd artikelnummer"
+                              : "Desktop IKEA productpagina met gemarkeerd artikelnummer"
+                          }
                           width={1200}
                           height={800}
                           className="w-full h-auto rounded border object-contain"
@@ -554,7 +561,7 @@ export function WatchForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="quantity">Waarschuw me zodra er minstens ___ stuks beschikbaar zijn</Label>
+                <Label htmlFor="quantity">Maximaal aantal meldingen voor dit product</Label>
                 <Input
                   id="quantity"
                   type="number"
@@ -566,7 +573,7 @@ export function WatchForm() {
                   className={desiredQuantity > 0 ? "border-primary/70 focus-visible:ring-primary/50" : ""}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Waarschuw mij wanneer minstens dit aantal producten beschikbaar is.
+                  Je krijgt een mail zodra er minimaal 1 match is. Dit aantal bepaalt hoeveel beschikbare matches we per check meenemen (tot dit maximum).
                 </p>
               </div>
 

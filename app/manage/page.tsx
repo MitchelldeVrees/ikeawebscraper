@@ -640,7 +640,10 @@ export default function ManagePage() {
                                 src={preview.imageUrl}
                                 width={64}
                                 height={64}
-                                alt={preview.name ?? "Product image"}
+                                alt={
+                                  preview.name ??
+                                  `IKEA productafbeelding voor artikel ${group.article_number}`
+                                }
                                 className="h-full w-full object-cover"
                               />
                             </div>
