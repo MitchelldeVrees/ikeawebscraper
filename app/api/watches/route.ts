@@ -252,13 +252,13 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { error, count } = await supabase
+    const { data: updatedRows, error } = await supabase
       .from("watches")
       .update({ desired_quantity: normalizedDesiredQuantity })
       .eq("email", user.email)
       .eq("product_name", normalizedArticleNumber)
       .eq("is_active", true)
-      .select("id", { count: "exact", head: true });
+      .select("id");
 
     if (error) {
       console.error("[v0] Error updating desired quantity:", error);
@@ -268,7 +268,9 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    if (!count) {
+    const updatedCount = updatedRows?.length ?? 0;
+
+    if (updatedCount === 0) {
       return NextResponse.json({ error: "Watch not found" }, { status: 404 });
     }
 
@@ -276,7 +278,7 @@ export async function PATCH(request: NextRequest) {
       {
         success: true,
         desiredQuantity: normalizedDesiredQuantity,
-        updated: count,
+        updated: updatedCount,
       },
       { status: 200 }
     );
