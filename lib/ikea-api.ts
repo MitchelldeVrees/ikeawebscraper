@@ -49,7 +49,7 @@ export async function fetchIkeaDeals(storeId: string): Promise<IkeaProduct[]> {
 
     while (hasMore && page < 20) {
       // Safety limit of 20 pages
-      const url = `https://web-api.ikea.com/circular/circular-asis/offers/grouped/search?languageCode=nl&size=100&storeIds=${storeId}&page=${page}`;
+      const url = `https://web-api.ikea.com/circular/circular-asis/offers/grouped/search?languageCode=nl&size=64&storeIds=${storeId}&page=${page}`;
 
       const response = await fetch(url, {
         headers: {
