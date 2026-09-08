@@ -561,7 +561,7 @@ export function WatchForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="quantity">Maximaal aantal meldingen voor dit product</Label>
+                <Label htmlFor="quantity">Hoeveelheid nodig</Label>
                 <Input
                   id="quantity"
                   type="number"
@@ -573,7 +573,7 @@ export function WatchForm() {
                   className={desiredQuantity > 0 ? "border-primary/70 focus-visible:ring-primary/50" : ""}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Je krijgt een mail zodra er minimaal 1 match is. Dit aantal bepaalt hoeveel beschikbare matches we per check meenemen (tot dit maximum).
+                  Je krijgt een mail zodra er minimaal 1 match is. Vul hier in hoeveel je zoekt; als er minder beschikbaar zijn, krijg je alsnog een alert.
                 </p>
               </div>
 

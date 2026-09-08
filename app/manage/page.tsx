@@ -10,6 +10,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Package,
@@ -725,6 +727,50 @@ export default function ManagePage() {
                             </div>
                           ))}
                         </div>
+                        {editingArticle === group.article_number && (
+                          <div className="mt-4 rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+                            <div className="space-y-2">
+                              <Label htmlFor={`desired-quantity-${group.article_number}`}>
+                                Hoeveelheid nodig
+                              </Label>
+                              <Input
+                                id={`desired-quantity-${group.article_number}`}
+                                type="number"
+                                min={1}
+                                value={desiredEdits[group.article_number] ?? group.desired_quantity ?? 1}
+                                onChange={(event) => {
+                                  const nextValue = Math.max(
+                                    1,
+                                    Number(event.target.value) || 1
+                                  );
+                                  setDesiredEdits((prev) => ({
+                                    ...prev,
+                                    [group.article_number]: nextValue,
+                                  }));
+                                }}
+                              />
+                              <p className="text-xs text-muted-foreground">
+                                Dit is de hoeveelheid die je zoekt. Als er minder beschikbaar zijn, krijg je alsnog een alert.
+                              </p>
+                            </div>
+                            <div className="flex flex-wrap justify-end gap-2">
+                              <Button
+                                variant="outline"
+                                onClick={() => setEditingArticle(null)}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                onClick={() => handleSaveDesiredQuantity(group.article_number)}
+                                disabled={savingDesired[group.article_number]}
+                              >
+                                {savingDesired[group.article_number]
+                                  ? "Saving..."
+                                  : "Save quantity"}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                         {editingArticle === group.article_number && (
                           <div className="mt-4 flex justify-end">
                             <Button
